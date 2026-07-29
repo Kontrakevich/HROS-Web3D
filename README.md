@@ -1,59 +1,24 @@
 # HROS — Human Relationship Operating System
 
-HROS v0.2 переводит Web3D-концепт в работающую систему данных: люди, отношения и моменты больше не являются только статичными объектами сцены.
+## v0.3 Person & Relationship Editor
 
-## Что работает
+HROS теперь поддерживает полный цикл управления людьми и отношениями: создание, редактирование, версионирование, финализация и безопасное удаление.
 
-- Web3D-вселенная строится из `Snapshot`, а не из массива внутри сцены.
-- Добавление людей, связей и моментов через интерфейс.
-- Сохранение данных в браузере на GitHub Pages.
-- Repository Service автоматически подключается к HROS API, когда он доступен.
-- FastAPI API с SQLite по умолчанию и PostgreSQL через `DATABASE_URL`.
-- Docker-сборка: frontend + API + PostgreSQL.
-- Статусы данных: `draft`, `observed`, `hypothesis`, `confirmed`, `finalized`, `archived`.
-- Источник, уверенность, версия и временные метки у каждой сущности.
-- Диагностический журнал frontend и API без записи секретов.
-- Экспорт и импорт JSON в локальном режиме.
+### Реализовано
+- Редактор карточки человека с ролью, категорией, силой связи, смыслом, статусом и уверенностью.
+- Отдельный редактор отношений с выбором двух узлов и удалением связи.
+- Каждое изменение повышает версию сущности и сохраняет предыдущий снимок.
+- Финализация переводит запись в статус `finalized`, не уничтожая историю.
+- Удаление человека каскадно удаляет связи и убирает его из участников моментов.
+- Центральный профиль пользователя защищён от удаления.
+- API CRUD: `PATCH|DELETE /api/v1/people/{id}`, `PATCH|DELETE /api/v1/relationships/{id}`.
+- История API: `GET /api/v1/history/{entity_type}/{entity_id}`.
+- Автономный GitHub Pages режим сохраняет версии в LocalStorage.
+- FastAPI, SQLite/PostgreSQL и Docker остаются совместимыми с v0.2.
 
-## Быстрый запуск Windows
+### Запуск
+- GitHub Pages: https://kontrakevich.github.io/HROS-Web3D/
+- Docker: `START_HROS.ps1`
+- API: http://localhost:8000/docs
 
-Запустите `START_HROS.ps1`. После сборки откроется:
-
-- приложение: `http://localhost:8088`
-- OpenAPI: `http://localhost:8000/docs`
-
-Остановка: `STOP_HROS.ps1`.
-
-## Запуск API без Docker
-
-```powershell
-cd backend; python -m venv .venv; .\.venv\Scripts\python.exe -m pip install -r requirements.txt; .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
-```
-
-Без `DATABASE_URL` API использует SQLite-файл `backend/hros.db`.
-
-## API v1
-
-- `GET /api/v1/health`
-- `GET /api/v1/snapshot`
-- `GET|POST /api/v1/people`
-- `GET|POST /api/v1/relationships`
-- `GET|POST /api/v1/moments`
-- `POST /api/v1/reset`
-- `GET /api/v1/diagnostics`
-
-## Архитектура
-
-```text
-Web3D / 2D UI
-      ↓
-Repository Service
-   ↙       ↘
-LocalStorage  HROS API
-                 ↓
-          SQLAlchemy 2
-           ↙       ↘
-        SQLite   PostgreSQL
-```
-
-GitHub Pages работает автономно в локальном режиме. Docker-сборка автоматически использует API и PostgreSQL.
+Архитектурный принцип сохранён: Web3D — навигация и исследование, 2D-интерфейс — точное редактирование и контроль данных.
