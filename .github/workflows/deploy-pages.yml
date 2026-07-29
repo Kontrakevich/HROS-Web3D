@@ -3,6 +3,8 @@ name: Deploy HROS Web3D to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +13,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -30,11 +32,11 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: python -m pip install --upgrade pip && pip install -r requirements-dev.txt
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
 
       - name: Test Data Core API
         working-directory: backend
-        run: pytest -q
+        run: python -m pytest -q
 
   build:
     runs-on: ubuntu-latest
@@ -50,7 +52,7 @@ jobs:
           cache: npm
 
       - name: Runtime diagnostics
-        run: node --version && npm --version
+        run: node --version && npm --version && python --version
 
       - name: Verify source tree
         run: test -f src/main.js && test -f src/style.css && test -f src/repository.js && test -f src/scene.js
@@ -65,14 +67,17 @@ jobs:
         run: test -f dist/index.html && test -f dist/config.js && find dist -maxdepth 2 -type f -print
 
       - name: Setup Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
