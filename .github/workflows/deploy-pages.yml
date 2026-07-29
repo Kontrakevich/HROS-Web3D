@@ -56,7 +56,7 @@ jobs:
         run: node --version && npm --version && python --version
 
       - name: Verify source tree
-        run: test -f src/main.js && test -f src/style.css && test -f src/repository.js && test -f src/scene.js
+        run: test -f src/main.js && test -f src/style.css && test -f src/repository.js && test -f src/scene.js && test -f src/v03-editor.js && test -f tests/browser-smoke.spec.js
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
@@ -65,7 +65,17 @@ jobs:
         run: npm run build
 
       - name: Verify build output
-        run: test -f dist/index.html && test -f dist/config.js && find dist -maxdepth 2 -type f -print
+        run: test -f dist/index.html && test -f dist/config.js && grep -q '/HROS-Web3D/assets/' dist/index.html && find dist -maxdepth 2 -type f -print
+
+      - name: Install Playwright smoke-test runtime
+        run: npm install --no-save --no-package-lock @playwright/test@1.61.1 && npx playwright install --with-deps chromium webkit
+
+      - name: Browser smoke test — Chromium and WebKit
+        run: |
+          npm run preview > /tmp/hros-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill $PREVIEW_PID || true; cat /tmp/hros-preview.log' EXIT
+          npx playwright test tests/browser-smoke.spec.js --workers=1 --reporter=line
 
       - name: Setup Pages
         if: github.event_name != 'pull_request'
@@ -116,7 +126,7 @@ jobs:
           deploy = os.environ["DEPLOY_RESULT"]
           successful = test == "success" and build == "success" and (event == "pull_request" or deploy == "success")
           context = "hros/ci" if event == "pull_request" else "hros/pages-pipeline"
-          description = f"test={test}; build={build}; deploy={deploy}"
+          description = f"test={test}; build={build}; browser-smoke=in-build; deploy={deploy}"
           payload = json.dumps({
               "state": "success" if successful else "failure",
               "context": context,
