@@ -14,7 +14,7 @@ for (const [browserName, engine] of Object.entries(engines)) {
     page.on('pageerror', (error) => consoleErrors.push(`[${browserName}] ${error.message}`));
 
     try {
-      await page.goto('http://127.0.0.1:4173/HROS-Web3D/', { waitUntil: 'networkidle' });
+      await page.goto('http://127.0.0.1:4173/HROS-Web3D/', { waitUntil: 'domcontentloaded' });
       await expect(page.locator('.topbar')).toBeVisible();
       await expect(page.locator('.brand')).toContainText('HROS');
       await expect(page.locator('#viewRoot')).not.toBeEmpty();
@@ -32,11 +32,13 @@ for (const [browserName, engine] of Object.entries(engines)) {
       await expect(page.locator('select[name="sourceKind"]')).toBeVisible();
 
       await page.locator('textarea[name="meaning"]').fill(`Browser smoke ${browserName}`);
-      await page.locator('#v04f button[type="submit"]').click();
-      await page.waitForLoadState('networkidle');
-      await page.getByRole('button', { name: 'Моменты' }).click();
-      await expect(page.locator('.version-badge').first()).toContainText('v2');
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+        page.locator('#v04f button[type="submit"]').click(),
+      ]);
 
+      await expect(page.getByRole('heading', { name: 'Моменты' })).toBeVisible();
+      await expect(page.locator('.version-badge').first()).toContainText('v2');
       expect(consoleErrors, consoleErrors.join('\n')).toEqual([]);
     } finally {
       await browser.close();
