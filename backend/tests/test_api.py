@@ -15,7 +15,7 @@ def test_health_and_seed_snapshot():
     with TestClient(app) as client:
         health = client.get("/api/v1/health")
         assert health.status_code == 200
-        assert health.json()["version"] == "0.2.0"
+        assert health.json()["version"] == "0.3.0"
 
         snapshot = client.get("/api/v1/snapshot")
         assert snapshot.status_code == 200
