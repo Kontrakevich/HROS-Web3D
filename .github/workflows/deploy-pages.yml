@@ -11,6 +11,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  statuses: write
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -87,3 +88,55 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  report:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [test, build, deploy]
+    steps:
+      - name: Publish verifiable pipeline status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TEST_RESULT: ${{ needs.test.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          event = os.environ["EVENT_NAME"]
+          test = os.environ["TEST_RESULT"]
+          build = os.environ["BUILD_RESULT"]
+          deploy = os.environ["DEPLOY_RESULT"]
+          successful = test == "success" and build == "success" and (event == "pull_request" or deploy == "success")
+          context = "hros/ci" if event == "pull_request" else "hros/pages-pipeline"
+          description = f"test={test}; build={build}; deploy={deploy}"
+          payload = json.dumps({
+              "state": "success" if successful else "failure",
+              "context": context,
+              "description": description[:140],
+              "target_url": os.environ["RUN_URL"],
+          }).encode("utf-8")
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['REPOSITORY']}/statuses/{os.environ['COMMIT_SHA']}",
+              data=payload,
+              method="POST",
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+                  "Content-Type": "application/json",
+                  "User-Agent": "HROS-CI",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              print(response.status, response.read().decode("utf-8")[:300])
+          if not successful:
+              raise SystemExit(1)
+          PY
