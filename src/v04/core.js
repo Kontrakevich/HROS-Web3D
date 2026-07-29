@@ -1,7 +1,8 @@
 export const K={api:'hros.api.url',data:'hros.snapshot.v0.2',hist:'hros.history.v0.3',events:'hros.diagnostics.v0.2',view:'hros.return.view'};
 export const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 export const now=()=>new Date().toISOString();
-const api=()=>String(localStorage.getItem(K.api)||window.__HROS_CONFIG__?.apiUrl||'').replace(/\/$/,'');
+const configuredApi=()=>String(localStorage.getItem(K.api)||window.__HROS_CONFIG__?.apiUrl||'').replace(/\/$/,'');
+const api=()=>document.querySelector('#storageMode')?.classList.contains('api')?configuredApi():'';
 const read=(k,f)=>JSON.parse(localStorage.getItem(k)||f);
 export const record=(level,action,details={})=>{const a=read(K.events,'[]');a.unshift({id:crypto.randomUUID(),at:now(),level,action,details});localStorage.setItem(K.events,JSON.stringify(a.slice(0,100)));};
 export const norm=m=>({...m,participantIds:Array.isArray(m?.participantIds)?m.participantIds:[],emotions:Array.isArray(m?.emotions)?m.emotions:[],relationshipEffect:{closeness:0,trust:0,tension:0,...(m?.relationshipEffect||{})},details:{meaning:'',place:'',tags:[],attachments:[],...(m?.details||{})},source:{kind:'user',label:'Добавлено пользователем',...(m?.source||{})}});
