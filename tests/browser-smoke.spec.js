@@ -48,14 +48,16 @@ test('HROS v0.4 renders and Moment Engine persists an edit', async ({ page }, te
 
   console.log(`[${browserName}] save new version after ${versionBefore}`);
   await page.locator('textarea[name="meaning"]').fill(`Browser smoke ${browserName}`);
+  const reload = page.waitForEvent('load', { timeout: 12_000 });
   await page.getByRole('button', { name: 'Сохранить версию', exact: true }).click({ noWaitAfter: true });
+  await reload;
 
+  await expect(page.locator('.topbar')).toBeVisible();
   await expect.poll(async () => page.evaluate(({ id, before }) => {
     const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v0.2'));
     return snapshot.moments.find((item) => item.id === id)?.version ?? before;
   }, { id: momentId, before: versionBefore }), { timeout: 12_000 }).toBe(versionBefore + 1);
 
-  await expect(page.locator('.topbar')).toBeVisible();
   await expect.poll(async () => page.evaluate((id) => {
     const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v0.2'));
     return snapshot.moments.find((item) => item.id === id)?.details?.meaning;
