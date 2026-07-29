@@ -1,47 +1,59 @@
-# HROS Web3D UI
+# HROS — Human Relationship Operating System
 
-Интерактивный Web3D-интерфейс HROS: центральный аватар, редактируемый граф отношений и лента моментов.
+HROS v0.2 переводит Web3D-концепт в работающую систему данных: люди, отношения и моменты больше не являются только статичными объектами сцены.
 
-## Быстрый импорт в GitHub
+## Что работает
 
-1. Создайте пустой публичный репозиторий `HROS-Web3D`.
-2. Распакуйте этот архив в локальную папку.
-3. Откройте папку в GitHub Desktop.
-4. Опубликуйте репозиторий в ветку `main`.
-5. В GitHub откройте **Settings → Pages → Build and deployment → Source** и выберите **GitHub Actions**.
-6. Workflow `Deploy HROS Web3D to GitHub Pages` опубликует проверенную production-сборку из `dist/`.
+- Web3D-вселенная строится из `Snapshot`, а не из массива внутри сцены.
+- Добавление людей, связей и моментов через интерфейс.
+- Сохранение данных в браузере на GitHub Pages.
+- Repository Service автоматически подключается к HROS API, когда он доступен.
+- FastAPI API с SQLite по умолчанию и PostgreSQL через `DATABASE_URL`.
+- Docker-сборка: frontend + API + PostgreSQL.
+- Статусы данных: `draft`, `observed`, `hypothesis`, `confirmed`, `finalized`, `archived`.
+- Источник, уверенность, версия и временные метки у каждой сущности.
+- Диагностический журнал frontend и API без записи секретов.
+- Экспорт и импорт JSON в локальном режиме.
 
-Публичный адрес после успешного запуска:
+## Быстрый запуск Windows
 
-`https://<github-login>.github.io/HROS-Web3D/`
+Запустите `START_HROS.ps1`. После сборки откроется:
 
-Для аккаунта Kontrakevich:
+- приложение: `http://localhost:8088`
+- OpenAPI: `http://localhost:8000/docs`
 
-`https://kontrakevich.github.io/HROS-Web3D/`
+Остановка: `STOP_HROS.ps1`.
 
-## Локальный запуск
-
-```powershell
-npm install; npm run dev
-```
-
-Откройте адрес, который покажет Vite, обычно `http://localhost:5173`.
-
-## Production-проверка
+## Запуск API без Docker
 
 ```powershell
-npm ci; npm run build; npm run preview
+cd backend; python -m venv .venv; .\.venv\Scripts\python.exe -m pip install -r requirements.txt; .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
-## Структура
+Без `DATABASE_URL` API использует SQLite-файл `backend/hros.db`.
 
-- `src/main.js` — приложение и Web3D-сцена.
-- `src/style.css` — интерфейс и адаптивность.
-- `vite.config.js` — сборка с относительными путями для GitHub Pages.
-- `dist/` — готовая проверенная production-сборка.
-- `.github/workflows/deploy-pages.yml` — автоматическая публикация без повторной сборки на сервере.
-- `docs/skills/github-pages-deployment/SKILL.md` — переиспользуемый deployment skill.
+## API v1
 
-## Данные
+- `GET /api/v1/health`
+- `GET /api/v1/snapshot`
+- `GET|POST /api/v1/people`
+- `GET|POST /api/v1/relationships`
+- `GET|POST /api/v1/moments`
+- `POST /api/v1/reset`
+- `GET /api/v1/diagnostics`
 
-Текущая версия сохраняет редактируемое состояние локально в браузере. Перед публикацией персональных данных следует отдельно внедрить аутентификацию и серверное хранилище.
+## Архитектура
+
+```text
+Web3D / 2D UI
+      ↓
+Repository Service
+   ↙       ↘
+LocalStorage  HROS API
+                 ↓
+          SQLAlchemy 2
+           ↙       ↘
+        SQLite   PostgreSQL
+```
+
+GitHub Pages работает автономно в локальном режиме. Docker-сборка автоматически использует API и PostgreSQL.

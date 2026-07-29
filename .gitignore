@@ -1,9 +1,7 @@
 node_modules/
 dist/
-.vite/
 .env
-.env.*
-!.env.example
-.DS_Store
-Thumbs.db
-npm-debug.log*
+*.db
+__pycache__/
+.pytest_cache/
+.venv/
