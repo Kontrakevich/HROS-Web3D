@@ -58,6 +58,16 @@ jobs:
       - name: Verify source tree
         run: test -f src/main.js && test -f src/style.css && test -f src/repository.js && test -f src/scene.js
 
+      - name: Generate Vite 8 lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-8-lock
+          path: package-lock.json
+          if-no-files-found: error
+
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
