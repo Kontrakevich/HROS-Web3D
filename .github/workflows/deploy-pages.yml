@@ -21,6 +21,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Restore missing source files
+        shell: bash
+        run: |
+          if [ ! -f src/main.js ]; then
+            archive="HROS-Web3D_GitHub_Import_v0.1.zip"
+            test -f "$archive"
+            rm -rf .hros-import
+            mkdir .hros-import
+            unzip -q "$archive" -d .hros-import
+            project_dir="$(dirname "$(find .hros-import -type f -path '*/src/main.js' -print -quit)")/.."
+            test -f "$project_dir/src/main.js"
+            cp -R "$project_dir/src" ./src
+            if [ -f "$project_dir/vite.config.js" ]; then cp "$project_dir/vite.config.js" ./vite.config.js; fi
+          fi
+          test -f src/main.js
+          test -f src/style.css
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -28,7 +45,7 @@ jobs:
           cache: npm
 
       - name: Runtime diagnostics
-        run: node --version && npm --version
+        run: node --version && npm --version && find src -maxdepth 2 -type f -print
 
       - name: Install dependencies
         run: npm ci
