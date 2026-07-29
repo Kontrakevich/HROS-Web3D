@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime,timezone
 from uuid import uuid4
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete,select,or_
 from sqlalchemy.orm import Session
 from . import models,schemas
@@ -15,7 +16,7 @@ class HrosRepository:
  def list_relationships(self):return [relationship_to_dict(x) for x in self.db.scalars(select(models.Relationship).order_by(models.Relationship.created_at)).all()]
  def list_moments(self):return [moment_to_dict(x) for x in self.db.scalars(select(models.Moment).order_by(models.Moment.date.desc())).all()]
  def snapshot(self):return {'meta':{'product':'HROS','version':'0.3.0','schemaVersion':'0.3.0','updatedAt':iso_now(),'mode':'api'},'people':self.list_people(),'relationships':self.list_relationships(),'moments':self.list_moments(),'observations':[],'hypotheses':[],'patterns':[]}
- def _rev(self,t,e,a,data):self.db.add(models.Revision(id=f'rev-{uuid4()}',entity_type=t,entity_id=e.id,action=a,version=e.version,snapshot=data))
+ def _rev(self,t,e,a,data):self.db.add(models.Revision(id=f'rev-{uuid4()}',entity_type=t,entity_id=e.id,action=a,version=e.version,snapshot=jsonable_encoder(data)))
  def create_person(self,p):
   d=p.model_dump(exclude={'relationshipLabel','relationshipType'});d['position']=d['position'] or self._next_position(len(self.list_people()));x=models.Person(id=f'person-{uuid4()}',name=d['name'],role=d['role'],type=d['type'],strength=d['strength'],summary=d['summary'],position=d['position'],is_self=d['isSelf'],status=d['status'],confidence=d['confidence'],source=d['source']);self.db.add(x);self.db.commit();self.db.refresh(x);return person_to_dict(x)
  def update_person(self,id,p):
