@@ -1,3 +1,4 @@
+export const HROS_PRODUCT_VERSION = '1.2.0';
 export const HROS_VERSION = '1.0.0';
 export const STORAGE_KEY_V1 = 'hros.snapshot.v1';
 export const LEGACY_STORAGE_KEYS = ['hros.snapshot.v0.2'];
@@ -84,7 +85,7 @@ export function ensureSnapshotV1(input, seedSnapshot) {
   merged.records = [...byId.values()];
 
   merged.meta.product = 'HROS';
-  merged.meta.version = HROS_VERSION;
+  merged.meta.version = HROS_PRODUCT_VERSION;
   merged.meta.schemaVersion = HROS_VERSION;
   merged.meta.updatedAt = now();
   merged.meta.migratedFrom = source.meta?.schemaVersion && source.meta.schemaVersion !== HROS_VERSION ? source.meta.schemaVersion : (source.meta?.migratedFrom || null);
