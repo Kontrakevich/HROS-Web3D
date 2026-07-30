@@ -2,14 +2,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const COLORS = {
-  self: 0x8fe9ff,
-  family: 0xc895ff,
-  legacy: 0xffcc85,
-  work: 0x79a9ff,
-  project: 0x6fffc0,
-  friend: 0x76f2b4,
-  other: 0xb4c4d8
+  self: 0x8fe9ff, family: 0xc895ff, legacy: 0xffcc85, work: 0x79a9ff,
+  project: 0x6fffc0, friend: 0x76f2b4, other: 0xb4c4d8
 };
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 export class HrosScene {
   constructor(mount, labels, onSelect) {
@@ -18,6 +14,7 @@ export class HrosScene {
     this.onSelect = onSelect;
     this.nodes = [];
     this.lines = [];
+    this.actionArrows = [];
     this.snapshot = null;
 
     this.scene = new THREE.Scene();
@@ -56,11 +53,7 @@ export class HrosScene {
       const radius = 12 + Math.random() * 30;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      positions.push(
-        radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.sin(phi) * Math.sin(theta),
-        radius * Math.cos(phi)
-      );
+      positions.push(radius * Math.sin(phi) * Math.cos(theta), radius * Math.sin(phi) * Math.sin(theta), radius * Math.cos(phi));
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -68,12 +61,47 @@ export class HrosScene {
     this.scene.add(this.stars);
   }
 
+  relationshipState(relationship) {
+    return (this.snapshot.relationshipStates || [])
+      .filter((record) => (record.relationshipIds || []).includes(relationship.id))
+      .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))[0] || null;
+  }
+
+  semanticPosition(person, index, self, relationships) {
+    if (person.isSelf) return [0, 0, 0];
+    const existing = Array.isArray(person.position) && person.position.length === 3 ? person.position : this.autoPosition(index);
+    const direction = new THREE.Vector3(existing[0], existing[1], existing[2]);
+    if (direction.lengthSq() < 0.01) direction.set(Math.cos(index), Math.sin(index), 0);
+    direction.normalize();
+    const relationship = relationships.find((item) =>
+      (item.sourceId === self?.id && item.targetId === person.id) || (item.targetId === self?.id && item.sourceId === person.id));
+    const state = relationship ? this.relationshipState(relationship) : null;
+    const explicitCloseness = state?.data?.closeness;
+    const legacyCloseness = relationship ? (Number(relationship.strength || 50) / 50) - 1 : -0.15;
+    const closeness = clamp(Number(explicitCloseness ?? legacyCloseness), -1, 1);
+    const radius = 2.8 + (1 - closeness) * 2.5;
+    const z = clamp(existing[2] || 0, -1.4, 1.4);
+    return [direction.x * radius, direction.y * radius, z];
+  }
+
+  ensureLegend() {
+    const stage = this.mount.closest('.stage');
+    if (!stage || stage.querySelector('.visual-semantics-legend')) return;
+    stage.insertAdjacentHTML('beforeend', `<div class="visual-semantics-legend" aria-label="Легенда пространственной семантики"><b>Семантика v1</b><span>дистанция — близость</span><span>размер — значимость</span><span>прозрачность — уверенность</span><span>пунктир — спорно/гипотеза</span><span>стрелка — действие</span></div>`);
+  }
+
   setData(snapshot) {
     this.snapshot = snapshot;
     this.clearDataObjects();
-    const personMap = new Map(snapshot.people.map((person, index) => [person.id, { ...person, position: person.position || this.autoPosition(index) }]));
+    this.ensureLegend();
+    const self = snapshot.people.find((person) => person.isSelf) || snapshot.people[0];
+    const relationships = snapshot.relationships || [];
+    const personMap = new Map(snapshot.people.map((person, index) => [person.id, {
+      ...person,
+      position: this.semanticPosition(person, index, self, relationships)
+    }]));
 
-    snapshot.relationships.forEach((relationship) => {
+    relationships.forEach((relationship) => {
       const source = personMap.get(relationship.sourceId);
       const target = personMap.get(relationship.targetId);
       if (!source || !target) return;
@@ -82,10 +110,24 @@ export class HrosScene {
       const middle = a.clone().lerp(b, 0.5);
       middle.z += 0.8 + Math.min(relationship.strength || 50, 100) / 160;
       const curve = new THREE.QuadraticBezierCurve3(a, middle, b);
-      const line = new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 40, 0.018 + (relationship.strength || 50) / 5000, 6, false),
-        new THREE.MeshBasicMaterial({ color: 0x78cfff, transparent: true, opacity: 0.18 + (relationship.strength || 50) / 350 })
-      );
+      const state = this.relationshipState(relationship);
+      const confidence = clamp(Number(state?.confidence ?? relationship.confidence ?? 1), 0.08, 1);
+      const trust = Number(state?.data?.trust ?? 0);
+      const tension = Number(state?.data?.tension ?? 0);
+      const disputed = ['hypothesis', 'disputed'].includes(state?.status || relationship.status);
+      const lineColor = tension > 0.35 ? 0xffa36b : trust > 0.35 ? 0x6fffc0 : 0x78cfff;
+      let line;
+      if (disputed) {
+        const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(52));
+        const material = new THREE.LineDashedMaterial({ color: lineColor, transparent: true, opacity: 0.28 + confidence * 0.45, dashSize: 0.18, gapSize: 0.12 });
+        line = new THREE.Line(geometry, material);
+        line.computeLineDistances();
+      } else {
+        line = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 40, 0.015 + Number(relationship.strength || 50) / 5200, 6, false),
+          new THREE.MeshBasicMaterial({ color: lineColor, transparent: true, opacity: 0.14 + confidence * 0.46 })
+        );
+      }
       this.scene.add(line);
       this.lines.push(line);
     });
@@ -94,20 +136,23 @@ export class HrosScene {
       const group = new THREE.Group();
       group.position.set(...person.position);
       const isSelf = Boolean(person.isSelf);
-      const size = isSelf ? 1.05 : 0.52 + Number(person.strength || 70) / 300;
+      const significance = clamp(Number(person.strength || 70), 0, 100);
+      const size = isSelf ? 1.05 : 0.48 + significance / 320;
+      const confidence = clamp(Number(person.confidence ?? 1), 0.15, 1);
       const color = COLORS[person.type] || COLORS.other;
       const core = new THREE.Mesh(
         new THREE.IcosahedronGeometry(size, 2),
         new THREE.MeshPhysicalMaterial({
           color, emissive: color, emissiveIntensity: isSelf ? 1.7 : 0.62,
-          roughness: 0.24, metalness: 0.18, transparent: true, opacity: 0.92, clearcoat: 1
+          roughness: 0.24, metalness: 0.18, transparent: true,
+          opacity: 0.35 + confidence * 0.57, clearcoat: 1
         })
       );
       core.userData.id = id;
       group.add(core);
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(size * 1.35, 0.018, 8, 96),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.52 })
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18 + confidence * 0.34 })
       );
       ring.rotation.x = Math.PI / 2.4;
       group.add(ring);
@@ -115,17 +160,32 @@ export class HrosScene {
       this.nodes.push({ person, group, core });
     });
 
+    (snapshot.actions || []).forEach((record) => {
+      const actor = personMap.get(record.data?.actorId);
+      for (const recipientId of record.data?.recipientIds || []) {
+        const recipient = personMap.get(recipientId);
+        if (!actor || !recipient) continue;
+        const origin = new THREE.Vector3(...actor.position);
+        const target = new THREE.Vector3(...recipient.position);
+        const direction = target.clone().sub(origin);
+        const length = Math.max(0.1, direction.length() - 0.9);
+        const arrow = new THREE.ArrowHelper(direction.normalize(), origin, length, 0xf5d06f, 0.24, 0.12);
+        arrow.line.material.transparent = true;
+        arrow.line.material.opacity = 0.42 * clamp(Number(record.confidence ?? 1), 0.1, 1);
+        this.scene.add(arrow);
+        this.actionArrows.push(arrow);
+      }
+    });
+
     this.labels.innerHTML = [...personMap.values()].map((person) => (
       `<button type="button" data-scene-id="${person.id}"><b>${this.escape(person.name)}</b><span>${this.escape(person.role)}</span></button>`
     )).join('');
-    this.labels.querySelectorAll('[data-scene-id]').forEach((button) => {
-      button.addEventListener('click', () => this.onSelect(button.dataset.sceneId));
-    });
+    this.labels.querySelectorAll('[data-scene-id]').forEach((button) => button.addEventListener('click', () => this.onSelect(button.dataset.sceneId)));
     this.resize();
   }
 
   clearDataObjects() {
-    [...this.nodes.map((item) => item.group), ...this.lines].forEach((object) => {
+    [...this.nodes.map((item) => item.group), ...this.lines, ...this.actionArrows].forEach((object) => {
       this.scene.remove(object);
       object.traverse?.((child) => {
         child.geometry?.dispose?.();
@@ -135,6 +195,7 @@ export class HrosScene {
     });
     this.nodes = [];
     this.lines = [];
+    this.actionArrows = [];
     this.labels.innerHTML = '';
   }
 
