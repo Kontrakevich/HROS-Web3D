@@ -39,14 +39,12 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   expect(initial.semanticMemory.length).toBeGreaterThan(0);
   expect(initial.livingMemory.length).toBeGreaterThan(0);
 
-  // COMMAND opens with one clear next action.
   await expect(page.locator('[data-command-screen="today"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Сегодня', exact: true })).toBeVisible();
   await expect(page.locator('#commandMainAction')).toHaveCount(1);
   await expect(page.locator('#commandMainAction')).toBeVisible();
   await expect(page.locator('.command-rail [data-command-view]')).toHaveCount(7);
 
-  // Theme preferences are UI-only and cannot mutate the HROS domain snapshot.
   const snapshotBeforeTheme = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
   await page.locator('[data-command-theme="family"]').click();
   await expect(page.locator('body')).toHaveAttribute('data-command-theme', 'family');
@@ -57,11 +55,18 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   expect(themeResult.snapshot).toBe(snapshotBeforeTheme);
   expect(themeResult.settings.theme).toBe('family');
 
-  // Avatar appearance is a reversible local preview, not a domain mutation.
   await openCommand(page, 'avatar');
   const snapshotBeforeAvatar = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
-  await page.locator('input[name="avatarRole"][value="athlete"]').check({ force: true });
-  await page.locator('.avatar-modifier-check input[value="sport-band"]').check();
+  await page.evaluate(() => {
+    const role = document.querySelector('input[name="avatarRole"][value="athlete"]');
+    const modifier = document.querySelector('.avatar-modifier-check input[value="sport-band"]');
+    if (!role || !modifier) throw new Error('Avatar controls are missing');
+    role.checked = true;
+    role.dispatchEvent(new Event('change', { bubbles: true }));
+    modifier.checked = true;
+    modifier.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('hros.command.ui.v1')).avatar.role)).toBe('athlete');
   await page.locator('#avatarRelationshipContext').selectOption('support');
   await page.locator('#saveAvatarAppearance').click();
   await expect(page.locator('.avatar-history-list [data-restore-avatar]')).toHaveCount(1);
@@ -78,7 +83,6 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   await page.locator('.avatar-history-list [data-restore-avatar]').first().click();
   await expect(page.locator('input[name="avatarRole"][value="athlete"]')).toBeChecked();
 
-  // A path can be switched without deleting or rewriting HROS records.
   await openCommand(page, 'paths');
   const snapshotBeforePath = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
   await page.locator('[data-select-path="partner"]').click();
@@ -90,7 +94,6 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   expect(pathResult.snapshot).toBe(snapshotBeforePath);
   expect(pathResult.settings.activePath).toBe('partner');
 
-  // Mobile navigation remains usable and the page does not overflow horizontally.
   await page.setViewportSize({ width: 390, height: 844 });
   await openCommand(page, 'today');
   await expect(page.locator('.command-mobile-nav')).toBeVisible();
@@ -98,7 +101,6 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(mobileOverflow).toBeLessThanOrEqual(1);
 
-  // AI Diary remains the primary input. No main snapshot mutation before confirmation.
   await page.locator('#commandMainAction').click();
   await expect(page.getByRole('heading', { name: 'Живой диалог — основной источник HROS' })).toBeVisible();
   await page.getByRole('button', { name: 'Начать сессию' }).click();
@@ -146,7 +148,6 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   expect(committedDiary.perspective).not.toBeNull();
   expect(committedDiary.perspective.evidenceIds).toContain(committedDiary.original.id);
 
-  // Existing exact editors remain available through System after the redesign.
   await page.setViewportSize({ width: 1440, height: 1000 });
   await openSystemSection(page, 'Моменты');
   await expect(page.getByRole('heading', { name: 'Моменты', exact: true })).toBeVisible();
