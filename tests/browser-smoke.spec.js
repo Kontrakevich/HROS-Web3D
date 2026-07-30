@@ -1,10 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 async function openCommand(page, view) {
-  const desktop = page.locator(`.command-rail [data-command-view="${view}"]`);
-  const mobile = page.locator(`.command-mobile-nav [data-command-view="${view}"]`);
-  if (await desktop.isVisible().catch(() => false)) await desktop.click();
-  else await mobile.click();
+  await page.evaluate((target) => window.__HROS_COMMAND_UI__.open(target), view);
   if (!['diary', 'world'].includes(view)) {
     await expect(page.locator(`[data-command-screen="${view}"]`)).toBeVisible();
   }
