@@ -7,16 +7,39 @@ TEST_DB = Path(__file__).parent / "test_hros.db"
 if TEST_DB.exists():
     TEST_DB.unlink()
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB}"
+os.environ.pop("OPENAI_API_KEY", None)
+os.environ.pop("OPENROUTER_API_KEY", None)
 
 from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
 
 
-def test_health_and_seed_snapshot():
+def test_health_seed_snapshot_and_agent_catalog():
     with TestClient(app) as client:
         health = client.get("/api/v1/health")
         assert health.status_code == 200
-        assert health.json()["version"] == "1.0.0"
+        health_data = health.json()
+        assert health_data["version"] == "1.2.0"
+        assert health_data["agents"]["configured"] is False
+        assert health_data["agents"]["readOnlyMemory"] is True
+        assert health_data["agents"]["requiresConfirmationForWrites"] is True
+
+        catalog = client.get("/api/v1/agents")
+        assert catalog.status_code == 200
+        catalog_data = catalog.json()
+        assert catalog_data["runtime"]["configured"] is False
+        assert {item["id"] for item in catalog_data["agents"]} == {
+            "diary", "relationship", "memory", "navigator", "avatar"
+        }
+
+        unavailable = client.post("/api/v1/agents/chat", json={
+            "agentId": "memory",
+            "conversationId": "test-conversation",
+            "message": "Что HROS помнит о базовом принципе?",
+            "history": [],
+        })
+        assert unavailable.status_code == 503
+        assert "OPENAI_API_KEY" in unavailable.json()["detail"]
 
         snapshot = client.get("/api/v1/snapshot")
         assert snapshot.status_code == 200
