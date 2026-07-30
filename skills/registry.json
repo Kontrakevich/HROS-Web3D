@@ -1,0 +1,18 @@
+{
+  "product": "HROS",
+  "contractVersion": "1.0.0",
+  "skills": [
+    {"id":"person-profile","path":"skills/person-profile/SKILL.md"},
+    {"id":"relationship-state","path":"skills/relationship-state/SKILL.md"},
+    {"id":"moment-engine","path":"skills/moment-engine/SKILL.md"},
+    {"id":"action-impact","path":"skills/action-impact/SKILL.md"},
+    {"id":"evidence-intake","path":"skills/evidence-intake/SKILL.md"},
+    {"id":"perspective-capture","path":"skills/perspective-capture/SKILL.md"},
+    {"id":"interview-engine","path":"skills/interview-engine/SKILL.md"},
+    {"id":"memory-projection","path":"skills/memory-projection/SKILL.md"},
+    {"id":"book-builder","path":"skills/book-builder/SKILL.md"},
+    {"id":"consent-visibility","path":"skills/consent-visibility/SKILL.md"},
+    {"id":"n8n-workflow-adapter","path":"skills/n8n-workflow-adapter/SKILL.md"},
+    {"id":"diagnostic-package","path":"skills/diagnostic-package/SKILL.md"}
+  ]
+}
