@@ -63,6 +63,8 @@ jobs:
           test -f src/domain-v1.js
           test -f src/alignment-v1.js
           test -f src/alignment-v1.css
+          test -f src/diary-v1.js
+          test -f src/diary-v1.css
           test -f src/scene.js
           test -f src/v03-editor.js
           test -f src/v04-moments.js
@@ -72,6 +74,7 @@ jobs:
           test -f skills/registry.json
           test -f skills/schemas/hros-skill-envelope.schema.json
           test -f skills/schemas/hros-domain-record.schema.json
+          test -f skills/ai-diary-session/SKILL.md
           test -f skills/moment-engine/SKILL.md
           test -f skills/moment-engine/moment.schema.json
           test -f skills/person-profile/SKILL.md
@@ -85,6 +88,7 @@ jobs:
           test -f skills/consent-visibility/SKILL.md
           test -f skills/n8n-workflow-adapter/SKILL.md
           test -f skills/diagnostic-package/SKILL.md
+          test -f docs/HROS_IDEOLOGY_AI_DIARY_v1.md
           test -f docs/HROS_BLUEPRINT_v1.md
           test -f docs/HROS_PRODUCT_PRINCIPLES_v1.md
           test -f docs/HROS_DOMAIN_ONTOLOGY_v1.md
@@ -94,11 +98,16 @@ jobs:
           test -f docs/HROS_VISUAL_SEMANTICS_v1.md
           test -f docs/HROS_MIGRATION_v0.4_to_v1.md
           test -f docs/HROS_ACCEPTANCE_CRITERIA_v1.md
+          test -f docs/HROS_ALIGNMENT_REPORT_v1.md
           node -e "const p=require('./package.json'); if(p.version!=='1.0.0') process.exit(1)"
           grep -q "schemaVersion: '1.0.0'" src/seed.js
+          grep -q "Живой диалог" docs/HROS_BLUEPRINT_v1.md
+          grep -q "awaiting_confirmation" docs/HROS_DATA_LIFECYCLE_v1.md
+          grep -q '"ai-diary-session"' skills/registry.json
           python -m json.tool skills/registry.json > /dev/null
           python -m json.tool skills/schemas/hros-skill-envelope.schema.json > /dev/null
           python -m json.tool skills/schemas/hros-domain-record.schema.json > /dev/null
+          node --check src/diary-v1.js
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
@@ -112,7 +121,7 @@ jobs:
       - name: Install Playwright smoke-test runtime
         run: npm install --no-save --no-package-lock @playwright/test@1.62.0 && npx playwright install --with-deps chromium webkit
 
-      - name: Browser smoke test — Chromium and WebKit
+      - name: Browser acceptance test — Chromium and WebKit
         run: |
           npm run preview > /tmp/hros-preview.log 2>&1 &
           PREVIEW_PID=$!
@@ -123,7 +132,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: hros-v1-browser-diagnostics-${{ github.run_id }}
+          name: hros-v1-diary-browser-diagnostics-${{ github.run_id }}
           path: |
             test-results
             playwright-report
@@ -174,7 +183,7 @@ jobs:
           event=os.environ['EVENT_NAME'];test=os.environ['TEST_RESULT'];build=os.environ['BUILD_RESULT'];deploy=os.environ['DEPLOY_RESULT']
           successful=test=='success' and build=='success' and (event=='pull_request' or deploy=='success')
           context='hros/ci' if event=='pull_request' else 'hros/pages-pipeline'
-          payload=json.dumps({'state':'success' if successful else 'failure','context':context,'description':f'v1 ontology={test}; build+browser={build}; deploy={deploy}'[:140],'target_url':os.environ['RUN_URL']}).encode()
+          payload=json.dumps({'state':'success' if successful else 'failure','context':context,'description':f'v1 diary={test}; build+browser={build}; deploy={deploy}'[:140],'target_url':os.environ['RUN_URL']}).encode()
           request=urllib.request.Request(f"https://api.github.com/repos/{os.environ['REPOSITORY']}/statuses/{os.environ['COMMIT_SHA']}",data=payload,method='POST',headers={'Accept':'application/vnd.github+json','Authorization':f"Bearer {os.environ['GH_TOKEN']}",'Content-Type':'application/json','User-Agent':'HROS-CI','X-GitHub-Api-Version':'2022-11-28'})
           with urllib.request.urlopen(request,timeout=30) as response:print(response.status,response.read().decode()[:300])
           if not successful:raise SystemExit(1)
