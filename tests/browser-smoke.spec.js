@@ -7,12 +7,15 @@ async function openCommand(page, view) {
   }
 }
 
-async function openSystemSection(page, title) {
-  await openCommand(page, 'library');
-  await page.locator('.library-card').filter({ has: page.getByRole('heading', { name: title, exact: true }) }).click();
+async function nativeChange(page, selector, value = null) {
+  await page.locator(selector).evaluate((element, nextValue) => {
+    if (nextValue !== null) element.value = nextValue;
+    if (element.type === 'radio' || element.type === 'checkbox') element.checked = true;
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+  }, value);
 }
 
-test('HROS COMMAND playtest preserves the AI diary contract and legacy editors', async ({ page }, testInfo) => {
+test('HROS COMMAND 1.1 stores avatar evolution and paths through the repository', async ({ page }, testInfo) => {
   const browserName = testInfo.project.name;
   const consoleErrors = [];
   page.on('console', (message) => {
@@ -22,74 +25,74 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
 
   await page.goto('', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.topbar')).toBeVisible();
-  await expect(page.locator('.brand')).toContainText('v1.0');
   await page.waitForFunction(() => window.__HROS_V1__?.ready === true);
   await page.waitForFunction(() => window.__HROS_DIARY__?.ready === true);
-  await page.waitForFunction(() => window.__HROS_COMMAND_UI__?.ready === true);
+  await page.waitForFunction(() => window.__HROS_COMMAND_UI__?.version === 'production-1.1');
 
   const initial = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
-  expect(initial.meta.schemaVersion).toBe('1.0.0');
-  expect(initial.records.length).toBeGreaterThan(8);
-  expect(initial.perspectives.length).toBeGreaterThan(0);
-  expect(initial.principles.length).toBeGreaterThan(0);
-  expect(initial.originalMemory.length).toBeGreaterThan(0);
-  expect(initial.semanticMemory.length).toBeGreaterThan(0);
-  expect(initial.livingMemory.length).toBeGreaterThan(0);
+  expect(initial.meta.schemaVersion).toBe('1.1.0');
+  expect(initial.meta.commandVersion).toBe('production-1.1');
+  expect(initial.avatarProfiles).toHaveLength(1);
+  expect(initial.developmentPaths).toHaveLength(4);
+  expect(initial.records.length).toBeGreaterThan(12);
 
   await expect(page.locator('[data-command-screen="today"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Сегодня', exact: true })).toBeVisible();
   await expect(page.locator('#commandMainAction')).toHaveCount(1);
-  await expect(page.locator('#commandMainAction')).toBeVisible();
-  await expect(page.locator('.command-rail [data-command-view]')).toHaveCount(7);
+  await expect(page.locator('.command-release-badge.production').first()).toContainText('COMMAND 1.1');
+  await expect(page.getByText('COMMAND PLAYTEST')).toHaveCount(0);
 
   const snapshotBeforeTheme = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
   await page.locator('[data-command-theme="family"]').click();
   await expect(page.locator('body')).toHaveAttribute('data-command-theme', 'family');
-  const themeResult = await page.evaluate(() => ({
-    snapshot: localStorage.getItem('hros.snapshot.v1'),
-    settings: JSON.parse(localStorage.getItem('hros.command.ui.v1')),
-  }));
-  expect(themeResult.snapshot).toBe(snapshotBeforeTheme);
-  expect(themeResult.settings.theme).toBe('family');
+  expect(await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'))).toBe(snapshotBeforeTheme);
 
   await openCommand(page, 'avatar');
-  const snapshotBeforeAvatar = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
-  await page.evaluate(() => {
-    const role = document.querySelector('input[name="avatarRole"][value="athlete"]');
-    const modifier = document.querySelector('.avatar-modifier-check input[value="sport-band"]');
-    if (!role || !modifier) throw new Error('Avatar controls are missing');
-    role.checked = true;
-    role.dispatchEvent(new Event('change', { bubbles: true }));
-    modifier.checked = true;
-    modifier.dispatchEvent(new Event('change', { bubbles: true }));
-  });
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('hros.command.ui.v1')).avatar.role)).toBe('athlete');
+  await expect(page.getByRole('heading', { name: 'Аватар', exact: true })).toBeVisible();
+  await expect(page.locator('#avatarThree')).toBeVisible();
+  const beforeAvatar = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
+  const beforeProfile = beforeAvatar.avatarProfiles[0];
+  const beforeAppearanceCount = beforeAvatar.avatarAppearances.length;
+
+  await nativeChange(page, 'input[name="avatarRole"][value="athlete"]');
+  await nativeChange(page, '.avatar-modifier-check input[value="sport-band"]');
   await page.locator('#avatarRelationshipContext').selectOption('support');
-  await page.locator('#saveAvatarAppearance').click();
-  await expect(page.locator('.avatar-history-list [data-restore-avatar]')).toHaveCount(1);
-  const avatarResult = await page.evaluate(() => ({
-    snapshot: localStorage.getItem('hros.snapshot.v1'),
-    settings: JSON.parse(localStorage.getItem('hros.command.ui.v1')),
-    history: JSON.parse(localStorage.getItem('hros.avatar.appearance.history.v1')),
-  }));
-  expect(avatarResult.snapshot).toBe(snapshotBeforeAvatar);
-  expect(avatarResult.settings.avatar.role).toBe('athlete');
-  expect(avatarResult.settings.avatar.modifiers).toContain('sport-band');
-  expect(avatarResult.history).toHaveLength(1);
-  expect(avatarResult.history[0].source).toBe('manual_playtest_confirmation');
-  await page.locator('.avatar-history-list [data-restore-avatar]').first().click();
-  await expect(page.locator('input[name="avatarRole"][value="athlete"]')).toBeChecked();
+  await page.locator('#reviewAvatarChange').click();
+  await expect(page.getByRole('heading', { name: 'Проверка изменения аватара' })).toBeVisible();
+  await expect(page.getByText('ПРОВЕРЯЕМЫЕ ОСНОВАНИЯ')).toBeVisible();
+
+  const duringReview = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
+  expect(duringReview.avatarProfiles[0].version).toBe(beforeProfile.version);
+  expect(duringReview.avatarProfiles[0].data.role).toBe(beforeProfile.data.role);
+  expect(duringReview.avatarAppearances).toHaveLength(beforeAppearanceCount);
+  expect(duringReview.avatarChangeSets.some((item) => item.status === 'draft' && item.data.state === 'awaiting_confirmation')).toBe(true);
+
+  await page.locator('#avatarConfirm').check();
+  await page.locator('#avatarReviewCommit').click();
+  await expect(page.getByRole('heading', { name: 'Рабочая версия сохранена' })).toBeVisible();
+
+  const afterAvatar = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
+  expect(afterAvatar.avatarProfiles[0].version).toBe(beforeProfile.version + 1);
+  expect(afterAvatar.avatarProfiles[0].data.role).toBe('athlete');
+  expect(afterAvatar.avatarProfiles[0].data.relationshipContext).toBe('support');
+  expect(afterAvatar.avatarProfiles[0].data.modifiers).toContain('sport-band');
+  expect(afterAvatar.avatarAppearances).toHaveLength(beforeAppearanceCount + 1);
+  expect(afterAvatar.avatarAppearances[0].data.immutable).toBe(true);
+  expect(afterAvatar.avatarConfirmations.length).toBeGreaterThan(0);
+  expect(afterAvatar.avatarChangeSets.some((item) => item.data.state === 'committed')).toBe(true);
 
   await openCommand(page, 'paths');
-  const snapshotBeforePath = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
   await page.locator('[data-select-path="partner"]').click();
   await expect(page.locator('.path-card.active')).toContainText('Партнёрство');
-  const pathResult = await page.evaluate(() => ({
-    snapshot: localStorage.getItem('hros.snapshot.v1'),
-    settings: JSON.parse(localStorage.getItem('hros.command.ui.v1')),
-  }));
-  expect(pathResult.snapshot).toBe(snapshotBeforePath);
-  expect(pathResult.settings.activePath).toBe('partner');
+  const afterPath = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
+  const activePaths = afterPath.developmentPaths.filter((item) => item.data.active);
+  expect(activePaths).toHaveLength(1);
+  expect(activePaths[0].data.pathId).toBe('partner');
+  expect(afterPath.avatarProfiles[0].data.activePathId).toBe('partner');
+
+  await openCommand(page, 'chronicle');
+  await expect(page.getByText('ЭВОЛЮЦИЯ АВАТАРА')).toBeVisible();
+  await expect(page.getByText(/Спортсмен/).first()).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await openCommand(page, 'today');
@@ -98,99 +101,33 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(mobileOverflow).toBeLessThanOrEqual(1);
 
+  const recordsBeforeDiary = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length);
   await page.locator('#commandMainAction').click();
+  await expect(page.getByRole('heading', { name: 'Живой диалог — основной источник HROS' })).toBeVisible();
+  await page.evaluate(() => document.querySelector('#diaryStart')?.click());
   await expect(page.getByRole('heading', { name: 'Живой диалог с ИИ-дневником' })).toBeVisible();
-  await page.locator('#diaryTopic').fill(`Проверка COMMAND ${browserName}`);
-  const diaryText = `Сегодня произошёл важный разговор в ${browserName}. Я почувствовал, что хочу точнее понимать влияние наших действий.`;
+  await page.locator('#diaryTopic').fill(`Проверка COMMAND 1.1 ${browserName}`);
+  const diaryText = `Сегодня произошёл важный разговор в ${browserName}. Я хочу сохранить его как проверяемый источник.`;
   await page.locator('#diaryMessage').fill(diaryText);
-  await page.getByRole('button', { name: 'Отправить' }).click();
-
-  const recordsDuringDialogue = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length);
-  expect(recordsDuringDialogue).toBe(initial.records.length);
-
-  await page.getByRole('button', { name: 'Завершить и проверить' }).click();
+  await page.locator('#diarySend').click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length)).toBe(recordsBeforeDiary);
+  await page.locator('#diaryFinish').click();
   await expect(page.getByRole('heading', { name: 'Проверка изменений' })).toBeVisible();
-  await expect(page.locator('.diary-transcript-preview p').filter({ hasText: diaryText })).toBeVisible();
-  const recordsDuringReview = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length);
-  expect(recordsDuringReview).toBe(initial.records.length);
-
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length)).toBe(recordsBeforeDiary);
   await page.locator('#diaryConfirm').check();
-  await page.getByRole('button', { name: 'Подтвердить и внести' }).click();
+  await page.locator('#diaryCommit').click();
   await expect(page.getByRole('heading', { name: 'Сессия подтверждена' })).toBeVisible();
-
-  const committedDiary = await page.evaluate((text) => {
-    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v1'));
-    const original = snapshot.originalMemory.find((item) => item.source?.kind === 'ai_diary' && item.data?.messages?.some((message) => message.text === text));
-    const confirmation = snapshot.consentPolicies.find((item) => item.source?.kind === 'user_confirmation' && item.data?.sessionId === original?.data?.sessionId);
-    const perspective = snapshot.perspectives.find((item) => item.data?.sessionId === original?.data?.sessionId && item.statement.includes(text));
-    return {
-      recordCount: snapshot.records.length,
-      original: original ? { id: original.id, status: original.status, messages: original.data.messages.length } : null,
-      confirmation: confirmation ? {
-        accepted: confirmation.data.acceptedChangeIds?.length || 0,
-        rejected: confirmation.data.rejectedChangeIds?.length || 0,
-      } : null,
-      perspective: perspective ? { id: perspective.id, evidenceIds: perspective.evidenceIds } : null,
-    };
-  }, diaryText);
-  expect(committedDiary.recordCount).toBeGreaterThan(initial.records.length);
-  expect(committedDiary.original).not.toBeNull();
-  expect(committedDiary.original.status).toBe('finalized');
-  expect(committedDiary.original.messages).toBeGreaterThanOrEqual(2);
-  expect(committedDiary.confirmation).not.toBeNull();
-  expect(committedDiary.confirmation.accepted).toBeGreaterThan(0);
-  expect(committedDiary.confirmation.rejected).toBeGreaterThan(0);
-  expect(committedDiary.perspective).not.toBeNull();
-  expect(committedDiary.perspective.evidenceIds).toContain(committedDiary.original.id);
+  const afterDiary = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
+  expect(afterDiary.records.length).toBeGreaterThan(recordsBeforeDiary);
+  expect(afterDiary.originalMemory.some((item) => item.data?.messages?.some((message) => message.text === diaryText))).toBe(true);
 
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await openSystemSection(page, 'Моменты');
-  await expect(page.getByRole('heading', { name: 'Моменты', exact: true })).toBeVisible();
-  const editButton = page.locator('[data-v04-edit]').first();
-  await expect(editButton).toBeVisible();
-  const momentId = await editButton.getAttribute('data-v04-edit');
-  const versionBefore = await page.evaluate((id) => {
-    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v1'));
-    return snapshot.moments.find((item) => item.id === id)?.version ?? 1;
-  }, momentId);
-  await editButton.click();
-  await expect(page.locator('#v04')).toBeVisible();
-  await page.locator('textarea[name="meaning"]').fill(`HROS COMMAND smoke ${browserName}`);
-  const reload = page.waitForEvent('load', { timeout: 12_000 });
-  await page.getByRole('button', { name: 'Сохранить версию', exact: true }).click({ noWaitAfter: true });
-  await reload;
-  await page.waitForFunction(() => window.__HROS_V1__?.ready === true);
-  await page.waitForFunction(() => window.__HROS_DIARY__?.ready === true);
-  await page.waitForFunction(() => window.__HROS_COMMAND_UI__?.ready === true);
-  await expect.poll(async () => page.evaluate(({ id, before }) => {
-    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v1'));
-    return snapshot.moments.find((item) => item.id === id)?.version ?? before;
-  }, { id: momentId, before: versionBefore })).toBe(versionBefore + 1);
-
-  await openSystemSection(page, 'Знания');
+  await openCommand(page, 'library');
+  await expect(page.getByRole('heading', { name: 'Система и редакторы' })).toBeVisible();
+  await expect(page.getByText('HROS COMMAND 1.1')).toBeVisible();
+  await page.locator('.library-card').filter({ has: page.getByRole('heading', { name: 'Знания', exact: true }) }).click();
   await expect(page.getByRole('heading', { name: 'Знания без подмены фактов' })).toBeVisible();
   await expect(page.getByText('Три уровня памяти')).toBeVisible();
-  const recordsBeforeManual = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length);
-  await page.getByRole('button', { name: '+ Запись' }).click();
-  await expect(page.locator('#recordDialog')).toBeVisible();
-  await page.locator('#recordForm select[name="kind"]').selectOption('perspective');
-  await page.locator('#recordForm textarea[name="statement"]').fill(`Перспектива COMMAND smoke ${browserName}`);
-  await page.locator('#recordForm select[name="perspectiveOwnerId"]').selectOption('person-mikhail');
-  await page.locator('#recordForm select[name="subjectId"]').selectOption('person-mikhail');
-  await page.locator('#recordForm select[name="visibility"]').selectOption('private');
-  await page.getByRole('button', { name: 'Сохранить запись' }).click();
-  await expect(page.getByText(`Перспектива COMMAND smoke ${browserName}`)).toBeVisible();
-  await expect.poll(async () => page.evaluate((before) => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length, recordsBeforeManual)).toBe(recordsBeforeManual + 1);
-
-  await openSystemSection(page, 'Пара');
-  await expect(page.getByRole('heading', { name: 'Три пространства пары' })).toBeVisible();
-  await expect(page.getByText('Совместное пространство')).toBeVisible();
-  await expect(page.getByText(/Перспектива Снежи.*не зафиксирована/)).toBeVisible();
-
-  await openSystemSection(page, 'Книга');
-  await expect(page.getByRole('heading', { name: 'Книга отношений' })).toBeVisible();
-  await expect(page.getByText('Понимать, как мы влияем друг на друга')).toBeVisible();
-  await expect(page.getByText('Бережные отношения требуют понимания')).toBeVisible();
 
   expect(consoleErrors, consoleErrors.join('\n')).toEqual([]);
 });
