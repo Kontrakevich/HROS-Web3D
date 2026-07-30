@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:18.4-alpine
     environment:
-      POSTGRES_DB: hros
-      POSTGRES_USER: hros
-      POSTGRES_PASSWORD: hros_local_password
+      POSTGRES_DB: ${POSTGRES_DB:-hros}
+      POSTGRES_USER: ${POSTGRES_USER:-hros}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - hros_postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hros -d hros"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hros} -d ${POSTGRES_DB:-hros}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -18,8 +18,8 @@ services:
     build:
       context: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg://hros:hros_local_password@db:5432/hros
-      CORS_ORIGINS: http://localhost:8088,http://127.0.0.1:8088
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-hros}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-hros}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8088,http://127.0.0.1:8088}
     depends_on:
       db:
         condition: service_healthy
