@@ -1,4 +1,6 @@
 const DIARY_KEY = 'hros.diary.active.v1';
+const RELEASE_LABEL = 'HROS v1.2 · WORKING';
+const BRAND_LABEL = 'Human Relationship Operating System · v1.2';
 
 function diaryState() {
   try { return JSON.parse(localStorage.getItem(DIARY_KEY) || 'null'); } catch { return null; }
@@ -18,16 +20,17 @@ function routeMessenger(event) {
 
 function updateReleaseLabels() {
   document.querySelectorAll('.command-release-badge').forEach((badge) => {
-    if (/PLAYTEST|LOCAL PREVIEW/i.test(badge.textContent || '')) badge.textContent = 'HROS v1.2 · WORKING';
+    if (/PLAYTEST|LOCAL PREVIEW/i.test(badge.textContent || '') && badge.textContent !== RELEASE_LABEL) badge.textContent = RELEASE_LABEL;
   });
   const brand = document.querySelector('.brand small');
-  if (brand) brand.textContent = 'Human Relationship Operating System · v1.2';
+  if (brand && brand.textContent !== BRAND_LABEL) brand.textContent = BRAND_LABEL;
 }
 
 function boot() {
   document.addEventListener('click', routeMessenger, true);
   updateReleaseLabels();
-  new MutationObserver(updateReleaseLabels).observe(document.querySelector('#app'), { childList: true, subtree: true });
+  const app = document.querySelector('#app');
+  if (app) new MutationObserver(updateReleaseLabels).observe(app, { childList: true, subtree: true });
   window.__HROS_MESSENGER_BRIDGE__ = { ready: true };
 }
 
