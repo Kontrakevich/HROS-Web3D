@@ -5,7 +5,15 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-EntityStatus = Literal["draft", "observed", "hypothesis", "confirmed", "finalized", "archived"]
+EntityStatus = Literal["draft", "observed", "hypothesis", "confirmed", "disputed", "finalized", "archived"]
+Visibility = Literal["private", "shared_with_partner", "shared", "group"]
+RecordKind = Literal[
+    "evidence", "fact", "perspective", "action", "person_facet", "relationship_state",
+    "observation", "hypothesis", "verification", "pattern", "principle",
+    "original_memory", "semantic_memory", "living_memory",
+    "interview_session", "interview_question", "interview_answer",
+    "book_chapter", "narrative_fragment", "consent_policy",
+]
 
 
 class EntityBase(BaseModel):
@@ -46,7 +54,6 @@ class PersonUpdate(BaseModel):
 
 class PersonRead(EntityBase):
     model_config = ConfigDict(from_attributes=True)
-
     id: str
     name: str
     role: str
@@ -185,6 +192,61 @@ class MomentRead(EntityBase):
     updatedAt: datetime
 
 
+class DomainRecordCreate(EntityBase):
+    kind: RecordKind
+    statement: str = Field(min_length=1)
+    subjectIds: list[str] = Field(default_factory=list)
+    relationshipIds: list[str] = Field(default_factory=list)
+    momentIds: list[str] = Field(default_factory=list)
+    perspectiveOwnerId: str | None = None
+    visibility: Visibility = "private"
+    evidenceIds: list[str] = Field(default_factory=list)
+    supportsIds: list[str] = Field(default_factory=list)
+    contradictsIds: list[str] = Field(default_factory=list)
+    data: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def perspective_has_owner(self):
+        if self.kind == "perspective" and not self.perspectiveOwnerId:
+            raise ValueError("Для перспективы нужен владелец")
+        return self
+
+
+class DomainRecordUpdate(BaseModel):
+    kind: RecordKind | None = None
+    statement: str | None = Field(default=None, min_length=1)
+    subjectIds: list[str] | None = None
+    relationshipIds: list[str] | None = None
+    momentIds: list[str] | None = None
+    perspectiveOwnerId: str | None = None
+    visibility: Visibility | None = None
+    evidenceIds: list[str] | None = None
+    supportsIds: list[str] | None = None
+    contradictsIds: list[str] | None = None
+    data: dict[str, Any] | None = None
+    status: EntityStatus | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    source: dict[str, Any] | None = None
+
+
+class DomainRecordRead(EntityBase):
+    id: str
+    kind: RecordKind
+    statement: str
+    subjectIds: list[str]
+    relationshipIds: list[str]
+    momentIds: list[str]
+    perspectiveOwnerId: str | None
+    visibility: Visibility
+    evidenceIds: list[str]
+    supportsIds: list[str]
+    contradictsIds: list[str]
+    data: dict[str, Any]
+    version: int
+    createdAt: datetime
+    updatedAt: datetime
+
+
 class RevisionRead(BaseModel):
     id: str
     entityType: str
@@ -200,6 +262,24 @@ class SnapshotRead(BaseModel):
     people: list[PersonRead]
     relationships: list[RelationshipRead]
     moments: list[MomentRead]
-    observations: list[Any] = Field(default_factory=list)
-    hypotheses: list[Any] = Field(default_factory=list)
-    patterns: list[Any] = Field(default_factory=list)
+    records: list[DomainRecordRead] = Field(default_factory=list)
+    evidence: list[DomainRecordRead] = Field(default_factory=list)
+    facts: list[DomainRecordRead] = Field(default_factory=list)
+    perspectives: list[DomainRecordRead] = Field(default_factory=list)
+    actions: list[DomainRecordRead] = Field(default_factory=list)
+    personFacets: list[DomainRecordRead] = Field(default_factory=list)
+    relationshipStates: list[DomainRecordRead] = Field(default_factory=list)
+    observations: list[DomainRecordRead] = Field(default_factory=list)
+    hypotheses: list[DomainRecordRead] = Field(default_factory=list)
+    verifications: list[DomainRecordRead] = Field(default_factory=list)
+    patterns: list[DomainRecordRead] = Field(default_factory=list)
+    principles: list[DomainRecordRead] = Field(default_factory=list)
+    originalMemory: list[DomainRecordRead] = Field(default_factory=list)
+    semanticMemory: list[DomainRecordRead] = Field(default_factory=list)
+    livingMemory: list[DomainRecordRead] = Field(default_factory=list)
+    interviewSessions: list[DomainRecordRead] = Field(default_factory=list)
+    interviewQuestions: list[DomainRecordRead] = Field(default_factory=list)
+    interviewAnswers: list[DomainRecordRead] = Field(default_factory=list)
+    bookChapters: list[DomainRecordRead] = Field(default_factory=list)
+    narrativeFragments: list[DomainRecordRead] = Field(default_factory=list)
+    consentPolicies: list[DomainRecordRead] = Field(default_factory=list)

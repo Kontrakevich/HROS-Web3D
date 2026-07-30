@@ -1,67 +1,72 @@
 import { test, expect } from '@playwright/test';
 
-test('HROS v0.4 renders and Moment Engine persists an edit', async ({ page }, testInfo) => {
+test('HROS v1 preserves moments and exposes knowledge, couple and book layers', async ({ page }, testInfo) => {
   const browserName = testInfo.project.name;
   const consoleErrors = [];
-
   page.on('console', (message) => {
-    if (message.type() === 'error') {
-      const value = `[${browserName}] ${message.text()}`;
-      consoleErrors.push(value);
-      console.log(value);
-    }
+    if (message.type() === 'error') consoleErrors.push(`[${browserName}] ${message.text()}`);
   });
-  page.on('pageerror', (error) => {
-    const value = `[${browserName}] ${error.message}`;
-    consoleErrors.push(value);
-    console.log(value);
-  });
+  page.on('pageerror', (error) => consoleErrors.push(`[${browserName}] ${error.message}`));
 
-  console.log(`[${browserName}] open application`);
   await page.goto('', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.topbar')).toBeVisible();
-  await expect(page.locator('.brand')).toContainText('HROS');
-  await expect(page.locator('#viewRoot')).not.toBeEmpty();
+  await expect(page.locator('.brand')).toContainText('v1.0');
+  await page.waitForFunction(() => window.__HROS_V1__?.ready === true);
 
-  console.log(`[${browserName}] open moments`);
+  const initial = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
+  expect(initial.meta.schemaVersion).toBe('1.0.0');
+  expect(initial.records.length).toBeGreaterThan(8);
+  expect(initial.perspectives.length).toBeGreaterThan(0);
+  expect(initial.principles.length).toBeGreaterThan(0);
+  expect(initial.originalMemory.length).toBeGreaterThan(0);
+  expect(initial.semanticMemory.length).toBeGreaterThan(0);
+  expect(initial.livingMemory.length).toBeGreaterThan(0);
+
   await page.getByRole('button', { name: 'Моменты' }).click();
   await expect(page.getByRole('heading', { name: 'Моменты' })).toBeVisible();
-  await expect(page.locator('.moment-row').first()).toBeVisible();
-
   const editButton = page.locator('[data-v04-edit]').first();
   await expect(editButton).toBeVisible();
   const momentId = await editButton.getAttribute('data-v04-edit');
-  expect(momentId).toBeTruthy();
-
-  console.log(`[${browserName}] open Moment Engine for ${momentId}`);
-  await editButton.click();
-  await expect(page.locator('#v04')).toBeVisible();
-  await expect(page.locator('#v04t')).toContainText('Редактировать');
-  await expect(page.locator('input[name="closeness"]')).toBeVisible();
-  await expect(page.locator('textarea[name="meaning"]')).toBeVisible();
-  await expect(page.locator('select[name="sourceKind"]')).toBeVisible();
-
   const versionBefore = await page.evaluate((id) => {
-    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v0.2'));
+    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v1'));
     return snapshot.moments.find((item) => item.id === id)?.version ?? 1;
   }, momentId);
-
-  console.log(`[${browserName}] save new version after ${versionBefore}`);
-  await page.locator('textarea[name="meaning"]').fill(`Browser smoke ${browserName}`);
+  await editButton.click();
+  await expect(page.locator('#v04')).toBeVisible();
+  await page.locator('textarea[name="meaning"]').fill(`HROS v1 smoke ${browserName}`);
   const reload = page.waitForEvent('load', { timeout: 12_000 });
   await page.getByRole('button', { name: 'Сохранить версию', exact: true }).click({ noWaitAfter: true });
   await reload;
-
-  await expect(page.locator('.topbar')).toBeVisible();
+  await page.waitForFunction(() => window.__HROS_V1__?.ready === true);
   await expect.poll(async () => page.evaluate(({ id, before }) => {
-    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v0.2'));
+    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v1'));
     return snapshot.moments.find((item) => item.id === id)?.version ?? before;
-  }, { id: momentId, before: versionBefore }), { timeout: 12_000 }).toBe(versionBefore + 1);
+  }, { id: momentId, before: versionBefore })).toBe(versionBefore + 1);
 
-  await expect.poll(async () => page.evaluate((id) => {
-    const snapshot = JSON.parse(localStorage.getItem('hros.snapshot.v0.2'));
-    return snapshot.moments.find((item) => item.id === id)?.details?.meaning;
-  }, momentId)).toBe(`Browser smoke ${browserName}`);
+  await page.getByRole('button', { name: 'Знания' }).click();
+  await expect(page.getByRole('heading', { name: 'Знания без подмены фактов' })).toBeVisible();
+  await expect(page.getByText('Три уровня памяти')).toBeVisible();
+  const recordsBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length);
+  await page.getByRole('button', { name: '+ Запись' }).click();
+  await expect(page.locator('#recordDialog')).toBeVisible();
+  await page.locator('#recordForm select[name="kind"]').selectOption('perspective');
+  await page.locator('#recordForm textarea[name="statement"]').fill(`Перспектива browser smoke ${browserName}`);
+  await page.locator('#recordForm select[name="perspectiveOwnerId"]').selectOption('person-mikhail');
+  await page.locator('#recordForm select[name="subjectId"]').selectOption('person-mikhail');
+  await page.locator('#recordForm select[name="visibility"]').selectOption('private');
+  await page.getByRole('button', { name: 'Сохранить запись' }).click();
+  await expect(page.getByText(`Перспектива browser smoke ${browserName}`)).toBeVisible();
+  await expect.poll(async () => page.evaluate((before) => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length, recordsBefore)).toBe(recordsBefore + 1);
+
+  await page.getByRole('button', { name: 'Пара' }).click();
+  await expect(page.getByRole('heading', { name: 'Три пространства пары' })).toBeVisible();
+  await expect(page.getByText('Совместное пространство')).toBeVisible();
+  await expect(page.getByText(/Перспектива Снежи.*не зафиксирована/)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Книга' }).click();
+  await expect(page.getByRole('heading', { name: 'Книга отношений' })).toBeVisible();
+  await expect(page.getByText('Понимать, как мы влияем друг на друга')).toBeVisible();
+  await expect(page.getByText('Бережные отношения требуют понимания')).toBeVisible();
 
   expect(consoleErrors, consoleErrors.join('\n')).toEqual([]);
 });

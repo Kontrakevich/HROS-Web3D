@@ -1,115 +1,58 @@
-const now = '2026-07-29T17:20:00.000Z';
+const now = '2026-07-30T05:30:00.000Z';
+const source = (kind, label) => ({ kind, label });
+const record = (id, kind, statement, extra = {}) => ({
+  id, kind, statement, subjectIds: [], relationshipIds: [], momentIds: [],
+  perspectiveOwnerId: null, status: kind === 'hypothesis' ? 'hypothesis' : 'confirmed',
+  confidence: 1, visibility: 'private', source: source('user', 'Первоначальная концепция HROS'),
+  evidenceIds: [], supportsIds: [], contradictsIds: [], data: {}, version: 1,
+  createdAt: now, updatedAt: now, ...extra
+});
 
 export const seedSnapshot = {
   meta: {
-    product: 'HROS',
-    version: '0.2.0',
-    schemaVersion: '0.2.0',
-    generatedAt: now,
-    mode: 'seed'
+    product: 'HROS', version: '1.0.0', schemaVersion: '1.0.0', generatedAt: now,
+    mode: 'seed',
+    principle: 'Давай мы оба будем понимать, как наши действия влияют друг на друга и к чему это приводит.'
   },
   people: [
-    {
-      id: 'person-mikhail', name: 'Михаил', role: 'Я', type: 'self', strength: 100,
-      summary: 'Центральный узел личной вселенной.', position: [0, 0, 0], isSelf: true,
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Профиль владельца' }
-    },
-    {
-      id: 'person-snezha', name: 'Снежа', role: 'Жена', type: 'family', strength: 96,
-      summary: 'Любовь, близость и совместная жизнь.', position: [4.6, 1.5, 0.3], isSelf: false,
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Личная история' }
-    },
-    {
-      id: 'person-daughter', name: 'Василиса', role: 'Дочь', type: 'family', strength: 94,
-      summary: 'Отцовство, забота и передача опыта.', position: [-4.4, 1.4, -0.2], isSelf: false,
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Семья' }
-    },
-    {
-      id: 'person-boris', name: 'Борис Александрович', role: 'Дедушка', type: 'legacy', strength: 90,
-      summary: 'Преемственность, память и род.', position: [-3.5, -2.7, 0.2], isSelf: false,
-      status: 'confirmed', confidence: 0.95, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Семейная память' }
-    },
-    {
-      id: 'person-marins', name: 'Marins Group', role: 'Работа', type: 'work', strength: 82,
-      summary: 'Созидание, лидерство и профессия.', position: [0.2, 4.6, -0.8], isSelf: false,
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Профессиональная деятельность' }
-    },
-    {
-      id: 'person-hros', name: 'HROS', role: 'Проект', type: 'project', strength: 86,
-      summary: 'Исследование отношений, система и наследие.', position: [0, -4.5, 0.8], isSelf: false,
-      status: 'observed', confidence: 0.9, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'system', label: 'Проект HROS' }
-    }
+    { id: 'person-mikhail', name: 'Михаил', role: 'Я', type: 'self', strength: 100, summary: 'Центральный узел личной вселенной.', position: [0, 0, 0], isSelf: true, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Профиль владельца') },
+    { id: 'person-snezha', name: 'Снежа', role: 'Жена', type: 'family', strength: 96, summary: 'Любовь, близость и совместная жизнь.', position: [4.6, 1.5, 0.3], isSelf: false, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Личная история') },
+    { id: 'person-daughter', name: 'Василиса', role: 'Дочь', type: 'family', strength: 94, summary: 'Отцовство, забота и передача опыта.', position: [-4.4, 1.4, -0.2], isSelf: false, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Семья') },
+    { id: 'person-boris', name: 'Борис Александрович', role: 'Дедушка', type: 'legacy', strength: 90, summary: 'Преемственность, память и род.', position: [-3.5, -2.7, 0.2], isSelf: false, status: 'confirmed', confidence: 0.95, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Семейная память') },
+    { id: 'person-marins', name: 'Marins Group', role: 'Работа', type: 'work', strength: 82, summary: 'Созидание, лидерство и профессия.', position: [0.2, 4.6, -0.8], isSelf: false, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Профессиональная деятельность') },
+    { id: 'person-hros', name: 'HROS', role: 'Проект', type: 'project', strength: 86, summary: 'Исследование отношений, система и наследие.', position: [0, -4.5, 0.8], isSelf: false, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('system', 'Проект HROS') }
   ],
   relationships: [
-    {
-      id: 'rel-mikhail-snezha', sourceId: 'person-mikhail', targetId: 'person-snezha',
-      type: 'partner', label: 'Пара', strength: 96,
-      meaning: 'Давай мы оба будем понимать, как наши действия влияют друг на друга и к чему это приводит.',
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Базис отношений' }
-    },
-    {
-      id: 'rel-mikhail-daughter', sourceId: 'person-mikhail', targetId: 'person-daughter',
-      type: 'parent', label: 'Отец и дочь', strength: 94,
-      meaning: 'Забота, присутствие и передача жизненного опыта.',
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Семья' }
-    },
-    {
-      id: 'rel-mikhail-boris', sourceId: 'person-mikhail', targetId: 'person-boris',
-      type: 'legacy', label: 'Преемственность', strength: 90,
-      meaning: 'Связь с родом и сохранение памяти.',
-      status: 'confirmed', confidence: 0.95, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Семейная память' }
-    },
-    {
-      id: 'rel-mikhail-marins', sourceId: 'person-mikhail', targetId: 'person-marins',
-      type: 'work', label: 'Профессия', strength: 82,
-      meaning: 'Создание визуальных систем и управление командами.',
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Работа' }
-    },
-    {
-      id: 'rel-mikhail-hros', sourceId: 'person-mikhail', targetId: 'person-hros',
-      type: 'project', label: 'Создатель', strength: 86,
-      meaning: 'Превращение памяти и отношений в живую систему.',
-      status: 'observed', confidence: 0.9, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'system', label: 'Проект HROS' }
-    }
+    { id: 'rel-mikhail-snezha', sourceId: 'person-mikhail', targetId: 'person-snezha', type: 'partner', label: 'Пара', strength: 96, meaning: 'Осознанное понимание взаимного влияния действий и последствий.', status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Базис отношений') },
+    { id: 'rel-mikhail-daughter', sourceId: 'person-mikhail', targetId: 'person-daughter', type: 'parent', label: 'Отец и дочь', strength: 94, meaning: 'Забота, присутствие и передача жизненного опыта.', status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Семья') },
+    { id: 'rel-mikhail-boris', sourceId: 'person-mikhail', targetId: 'person-boris', type: 'legacy', label: 'Преемственность', strength: 90, meaning: 'Связь с родом и сохранение памяти.', status: 'confirmed', confidence: 0.95, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Семейная память') },
+    { id: 'rel-mikhail-marins', sourceId: 'person-mikhail', targetId: 'person-marins', type: 'work', label: 'Профессия', strength: 82, meaning: 'Создание визуальных систем и управление командами.', status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Работа') },
+    { id: 'rel-mikhail-hros', sourceId: 'person-mikhail', targetId: 'person-hros', type: 'project', label: 'Создатель', strength: 86, meaning: 'Превращение памяти и отношений в живую проверяемую систему.', status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('system', 'Проект HROS') }
   ],
   moments: [
-    {
-      id: 'moment-childhood', title: 'Семейная преемственность', date: '1995-01-01', period: 'Детство',
-      description: 'Память о семье как основа личной идентичности.',
-      participantIds: ['person-mikhail', 'person-boris'], emotions: ['тепло', 'уважение'],
-      significance: 90, relationshipEffect: { closeness: 0.7, trust: 0.8, tension: 0 },
-      status: 'confirmed', confidence: 0.85, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Личная память' }
-    },
-    {
-      id: 'moment-snezha', title: 'Жизнь со Снежей', date: '2026-01-01', period: 'Настоящее',
-      description: 'Совместная жизнь, близость и создание общих моментов.',
-      participantIds: ['person-mikhail', 'person-snezha'], emotions: ['любовь', 'близость'],
-      significance: 98, relationshipEffect: { closeness: 0.9, trust: 0.8, tension: -0.2 },
-      status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'user', label: 'Совместная история' }
-    },
-    {
-      id: 'moment-hros', title: 'Создание HROS', date: '2026-07-29', period: '2026',
-      description: 'Переход от визуального прототипа к работающему ядру данных.',
-      participantIds: ['person-mikhail', 'person-hros'], emotions: ['интерес', 'созидание'],
-      significance: 86, relationshipEffect: { closeness: 0.5, trust: 0.4, tension: 0 },
-      status: 'observed', confidence: 0.95, version: 1, createdAt: now, updatedAt: now,
-      source: { kind: 'system', label: 'HROS v0.2' }
-    }
+    { id: 'moment-childhood', title: 'Семейная преемственность', date: '1995-01-01', period: 'Детство', description: 'Память о семье как основа личной идентичности.', participantIds: ['person-mikhail', 'person-boris'], emotions: ['тепло', 'уважение'], significance: 90, relationshipEffect: { closeness: 0.7, trust: 0.8, tension: 0 }, details: { meaning: 'Преемственность стала важной частью системы ценностей.', place: '', tags: ['семья', 'преемственность'], attachments: [] }, status: 'confirmed', confidence: 0.85, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Личная память') },
+    { id: 'moment-snezha', title: 'Базовый принцип пары', date: '2026-07-23', period: 'Настоящее', description: 'Формулировка принципа о влиянии действий партнёров друг на друга.', participantIds: ['person-mikhail', 'person-snezha'], emotions: ['близость', 'ответственность'], significance: 100, relationshipEffect: { closeness: 0.7, trust: 0.6, tension: -0.2 }, details: { meaning: 'Взаимное понимание влияния действий является основой бережных отношений.', place: '', tags: ['пара', 'принцип'], attachments: [] }, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('user', 'Совместная история') },
+    { id: 'moment-hros', title: 'Alignment HROS v1', date: '2026-07-30', period: '2026', description: 'Возврат технической реализации к первоначальной продуктовой задумке.', participantIds: ['person-mikhail', 'person-hros'], emotions: ['интерес', 'созидание', 'ответственность'], significance: 95, relationshipEffect: { closeness: 0.5, trust: 0.5, tension: -0.1 }, details: { meaning: 'Blueprint, ontology, privacy и skill-архитектура снова стали каноническими.', place: '', tags: ['HROS', 'alignment'], attachments: [] }, status: 'confirmed', confidence: 1, version: 1, createdAt: now, updatedAt: now, source: source('system', 'HROS v1') }
   ],
-  observations: [],
-  hypotheses: [],
-  patterns: []
+  records: [
+    record('evidence-principle', 'evidence', 'Исходная формулировка базового принципа отношений сохранена без перезаписи.', { momentIds: ['moment-snezha'], subjectIds: ['person-mikhail', 'person-snezha'], visibility: 'shared', source: source('user', 'Дословная формулировка пользователя'), data: { originalText: 'Давай мы оба будем понимать, как наши действия влияют друг на друга и к чему это приводит.' } }),
+    record('fact-principle-created', 'fact', '23 июля 2026 года принцип был выделен как базис отношений и более широких человеческих взаимодействий.', { momentIds: ['moment-snezha'], subjectIds: ['person-mikhail', 'person-snezha'], evidenceIds: ['evidence-principle'], visibility: 'shared' }),
+    record('perspective-mikhail-principle', 'perspective', 'Для Михаила осознание взаимного влияния действий является условием бережного отношения в паре.', { perspectiveOwnerId: 'person-mikhail', subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], momentIds: ['moment-snezha'], evidenceIds: ['evidence-principle'], visibility: 'private' }),
+    record('perspective-snezha-open', 'perspective', 'Перспектива Снежи по этому принципу пока не зафиксирована и не должна предполагаться системой.', { perspectiveOwnerId: 'person-snezha', subjectIds: ['person-snezha'], relationshipIds: ['rel-mikhail-snezha'], momentIds: ['moment-snezha'], status: 'draft', confidence: 0, visibility: 'private', source: source('system', 'Пустая перспектива, ожидающая ответа') }),
+    record('action-share-impact', 'action', 'Обсуждать действия, которые затрагивают чувства и состояние отношений.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], momentIds: ['moment-snezha'], visibility: 'shared', data: { actorId: 'person-mikhail', recipientIds: ['person-snezha'], intent: 'Повысить взаимное понимание и предсказуемость', observableBehavior: 'Прямо сообщать, какое действие и как влияет на чувства', needsTouched: ['близость', 'безопасность', 'уважение'], boundariesTouched: [], repairOptions: ['уточнить намерение', 'признать влияние', 'согласовать дальнейшее действие'] } }),
+    record('facet-mikhail-value-awareness', 'person_facet', 'Осознанность последствий действий — значимая ценность Михаила.', { subjectIds: ['person-mikhail'], perspectiveOwnerId: 'person-mikhail', evidenceIds: ['evidence-principle'], data: { facetType: 'value', value: 'осознанность взаимного влияния' } }),
+    record('state-pair-mikhail', 'relationship_state', 'Текущее состояние отношений с позиции Михаила должно оцениваться отдельно от позиции Снежи.', { relationshipIds: ['rel-mikhail-snezha'], perspectiveOwnerId: 'person-mikhail', visibility: 'private', status: 'observed', confidence: 0.6, data: { period: '2026-07', closeness: 0.1, trust: 0.3, safety: 0.2, reciprocity: 0, availability: -0.2, boundaryRespect: 0.2, tension: 0.5 } }),
+    record('observation-communication', 'observation', 'Прямое обсуждение влияния действий рассматривается как способ предупреждать накопление дистанции.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], evidenceIds: ['evidence-principle'], status: 'observed', confidence: 0.8 }),
+    record('hypothesis-mutual-awareness', 'hypothesis', 'Регулярное взаимное проговаривание влияния действий может повысить близость и снизить напряжение.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], supportsIds: ['observation-communication'], confidence: 0.55, data: { verificationQuestion: 'Ощущают ли оба партнёра больше близости и безопасности после таких разговоров?', verificationPlan: 'Сравнить несколько моментов до и после практики, сохраняя обе перспективы.' } }),
+    record('verification-principle-status', 'verification', 'Гипотеза пока не подтверждена перспективой обоих участников.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], supportsIds: ['hypothesis-mutual-awareness'], status: 'observed', confidence: 1, data: { result: 'insufficient_data', missing: ['perspective-snezha'] } }),
+    record('pattern-not-yet', 'pattern', 'Повторяющийся паттерн не сформирован: требуется несколько независимых моментов.', { relationshipIds: ['rel-mikhail-snezha'], supportsIds: ['hypothesis-mutual-awareness'], status: 'draft', confidence: 0.1 }),
+    record('principle-mutual-impact', 'principle', 'Бережные отношения требуют понимания того, как действия каждого влияют на другого и к каким последствиям приводят.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], momentIds: ['moment-snezha'], evidenceIds: ['evidence-principle'], supportsIds: ['fact-principle-created', 'perspective-mikhail-principle'], visibility: 'shared', data: { scope: 'couple_and_general', chapterId: 'chapter-foundation' } }),
+    record('memory-original-principle', 'original_memory', 'Дословная исходная запись принципа.', { evidenceIds: ['evidence-principle'], visibility: 'shared', data: { immutable: true, content: 'Давай мы оба будем понимать, как наши действия влияют друг на друга и к чему это приводит.' } }),
+    record('memory-semantic-principle', 'semantic_memory', 'Принцип связан с Михаилом, Снежей, их отношениями и моментом формулировки.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], momentIds: ['moment-snezha'], supportsIds: ['memory-original-principle'] }),
+    record('memory-living-principle', 'living_memory', 'Текущее понимание: взаимное осознание влияния действий — центральный ориентир отношений, но эффект практики ещё требует подтверждения обеими сторонами.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], supportsIds: ['memory-semantic-principle', 'verification-principle-status'], confidence: 0.75, data: { validFrom: '2026-07-23', reviewAfter: '2026-09-01' } }),
+    record('interview-couple-principle', 'interview_session', 'Интервью для фиксации двух перспектив базового принципа.', { subjectIds: ['person-mikhail', 'person-snezha'], relationshipIds: ['rel-mikhail-snezha'], status: 'draft', visibility: 'shared_with_partner', data: { topic: 'взаимное влияние действий', state: 'awaiting_partner', nextQuestion: 'Что для тебя означает этот принцип и в каких ситуациях он особенно важен?' } }),
+    record('chapter-foundation', 'book_chapter', 'Глава 1. Взаимное влияние и ответственность за пространство отношений.', { supportsIds: ['principle-mutual-impact'], visibility: 'shared', data: { order: 1, title: 'Понимать, как мы влияем друг на друга', scope: 'relationship_book' } }),
+    record('narrative-foundation', 'narrative_fragment', 'Отношения становятся бережнее не тогда, когда люди перестают влиять друг на друга, а когда начинают замечать это влияние и принимать его последствия всерьёз.', { supportsIds: ['principle-mutual-impact'], visibility: 'shared', data: { chapterId: 'chapter-foundation' } }),
+    record('consent-default-private', 'consent_policy', 'Новые личные записи остаются приватными до явного решения поделиться ими.', { subjectIds: ['person-mikhail'], status: 'finalized', visibility: 'private', source: source('system', 'Privacy by default'), data: { ownerId: 'person-mikhail', defaultVisibility: 'private', canShareWithPartner: true, aiMayIncreaseVisibility: false } })
+  ]
 };

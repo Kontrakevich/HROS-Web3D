@@ -5,10 +5,11 @@ from sqlalchemy.engine import Engine
 
 
 def apply_schema_migrations(engine: Engine) -> None:
-    """Apply the minimal additive migration required by HROS v0.4.
+    """Apply additive, idempotent migrations for legacy HROS databases.
 
-    The project intentionally keeps this migration small and deterministic until
-    Alembic is introduced. It is safe to run repeatedly on SQLite and PostgreSQL.
+    Base.metadata.create_all creates new v1 tables such as domain_records. This
+    function only repairs columns missing from databases created before v0.4.
+    Existing rows, IDs and revisions are never removed here.
     """
     inspector = inspect(engine)
     if "moments" not in inspector.get_table_names():
