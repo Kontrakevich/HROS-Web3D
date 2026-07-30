@@ -271,9 +271,10 @@ def activate_path(db: Session, path_id: str, owner_id: str | None = None) -> dic
         raise ValueError("Неизвестный путь развития")
     ensure_defaults(db, owner_id)
     person = owner(db, owner_id)
+    person_id = person.id
     paths = db.scalars(select(models.DomainRecord).where(
         models.DomainRecord.kind == "development_path",
-        models.DomainRecord.perspective_owner_id == person.id,
+        models.DomainRecord.perspective_owner_id == person_id,
     )).all()
     timestamp = now()
     for item in paths:
@@ -283,10 +284,11 @@ def activate_path(db: Session, path_id: str, owner_id: str | None = None) -> dic
         item.source = {"kind": "user", "label": "Выбор активного пути HROS COMMAND"}
         item.version += 1
         item.updated_at = timestamp
-    profile = latest(db, "avatar_profile", person.id, {"confirmed", "finalized", "observed"})
+    profile = latest(db, "avatar_profile", person_id, {"confirmed", "finalized", "observed"})
     if profile:
         profile.data = {**(profile.data or {}), "activePathId": path_id}
         profile.version += 1
         profile.updated_at = timestamp
     db.commit()
-    return state(db, person.id)
+    db.expire_all()
+    return state(db, person_id)
