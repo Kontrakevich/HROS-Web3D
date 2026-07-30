@@ -60,7 +60,7 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   // Avatar appearance is a reversible local preview, not a domain mutation.
   await openCommand(page, 'avatar');
   const snapshotBeforeAvatar = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
-  await page.locator('input[name="avatarRole"][value="athlete"]').check();
+  await page.locator('input[name="avatarRole"][value="athlete"]').check({ force: true });
   await page.locator('.avatar-modifier-check input[value="sport-band"]').check();
   await page.locator('#avatarRelationshipContext').selectOption('support');
   await page.locator('#saveAvatarAppearance').click();
