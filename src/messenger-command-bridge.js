@@ -1,6 +1,4 @@
 const DIARY_KEY = 'hros.diary.active.v1';
-const RELEASE_LABEL = 'HROS v1.2 · WORKING';
-const BRAND_LABEL = 'Human Relationship Operating System · v1.2';
 
 function diaryState() {
   try { return JSON.parse(localStorage.getItem(DIARY_KEY) || 'null'); } catch { return null; }
@@ -18,20 +16,9 @@ function routeMessenger(event) {
   window.__HROS_MESSENGER__.open('diary');
 }
 
-function updateReleaseLabels() {
-  document.querySelectorAll('.command-release-badge').forEach((badge) => {
-    if (/PLAYTEST|LOCAL PREVIEW/i.test(badge.textContent || '') && badge.textContent !== RELEASE_LABEL) badge.textContent = RELEASE_LABEL;
-  });
-  const brand = document.querySelector('.brand small');
-  if (brand && brand.textContent !== BRAND_LABEL) brand.textContent = BRAND_LABEL;
-}
-
 function boot() {
   document.addEventListener('click', routeMessenger, true);
-  updateReleaseLabels();
-  const app = document.querySelector('#app');
-  if (app) new MutationObserver(updateReleaseLabels).observe(app, { childList: true, subtree: true });
-  window.__HROS_MESSENGER_BRIDGE__ = { ready: true };
+  window.__HROS_MESSENGER_BRIDGE__ = { ready: true, productVersion: '1.2.0' };
 }
 
 const timer = setInterval(() => {
