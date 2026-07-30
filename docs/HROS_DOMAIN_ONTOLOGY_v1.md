@@ -1,8 +1,11 @@
-# HROS v1 — Domain Ontology
+# HROS v1.2 — Domain Ontology
 
-## Общий контракт записи
+Product version: `1.2.0`  
+Domain schema version: `1.0.0`
 
-Каждая доменная запись содержит:
+## Общий контракт доменной записи
+
+Каждая HROS-запись содержит:
 
 ```json
 {
@@ -17,10 +20,12 @@
   "confidence": 0.0,
   "visibility": "private|shared_with_partner|shared|group",
   "source": {
-    "kind": "user|voice|message|document|ai|system|ai_diary|user_confirmation",
+    "kind": "user|voice|message|document|ai|system|ai_diary|hros_messenger|user_confirmation",
     "label": "...",
     "sessionId": "diary-session-id",
-    "messageId": "diary-message-id"
+    "messageId": "message-id",
+    "conversationId": "messenger-thread-id",
+    "agentId": "agent-id"
   },
   "evidenceIds": [],
   "supportsIds": [],
@@ -32,9 +37,107 @@
 }
 ```
 
+## Application Layer: Messenger
+
+Messenger entities are operational objects, not automatically domain records.
+
+### MessengerThread
+
+```json
+{
+  "id": "thread-id",
+  "agentId": "diary|relationship|memory|navigator|avatar",
+  "title": "...",
+  "pinned": false,
+  "muted": false,
+  "archived": false,
+  "unread": 0,
+  "createdAt": "ISO-8601",
+  "updatedAt": "ISO-8601",
+  "messages": []
+}
+```
+
+### MessengerMessage
+
+```json
+{
+  "id": "message-id",
+  "role": "user|assistant",
+  "text": "...",
+  "at": "ISO-8601",
+  "status": "delivered|read|error",
+  "editedAt": "ISO-8601|null",
+  "replyToId": "message-id|null",
+  "attachments": [],
+  "memoryRefs": [],
+  "runtime": {}
+}
+```
+
+A MessengerMessage is not Evidence or Fact until the user explicitly transfers the conversation into a DiarySession and confirms the Change Set.
+
+### AgentProfile
+
+```json
+{
+  "id": "relationship",
+  "title": "Аналитик отношений",
+  "purpose": "...",
+  "modelPolicy": "server-configured",
+  "memoryAccess": "read_only_filtered",
+  "writeAccess": "none"
+}
+```
+
+### MemoryContextEnvelope
+
+Ephemeral request object:
+
+```json
+{
+  "conversationId": "thread-id",
+  "agentId": "agent-id",
+  "query": "...",
+  "memoryRefs": [
+    {
+      "id": "record-id",
+      "kind": "perspective",
+      "status": "confirmed",
+      "confidence": 1,
+      "statement": "...",
+      "source": {}
+    }
+  ],
+  "createdAt": "ISO-8601",
+  "expiresAfterRequest": true
+}
+```
+
+Context Envelope is not stored as Living Memory by default.
+
+### AgentResponse
+
+```json
+{
+  "conversationId": "thread-id",
+  "agentId": "agent-id",
+  "reply": "... [HROS:record-id]",
+  "memoryRefs": [],
+  "runtime": {
+    "provider": "openai|openrouter|local",
+    "model": "..."
+  },
+  "writeApplied": false,
+  "confirmationRequired": true
+}
+```
+
+AgentResponse is an AI output, not a confirmed DomainRecord.
+
 ## Diary Session Layer
 
-Diary Session является первичным входным контуром HROS.
+Diary Session является единственным текущим переходом из Messenger conversation в доменную память.
 
 ### DiarySession
 
@@ -45,7 +148,12 @@ Diary Session является первичным входным контуро�
   "participantId": "person-id",
   "topic": "...",
   "startedAt": "ISO-8601",
-  "endedAt": "ISO-8601|null"
+  "endedAt": "ISO-8601|null",
+  "source": {
+    "kind": "hros_messenger|direct_diary",
+    "conversationId": "thread-id|null",
+    "agentId": "agent-id|null"
+  }
 }
 ```
 
@@ -53,7 +161,7 @@ Diary Session является первичным входным контуро�
 
 ### DiaryMessage
 
-Дословная реплика пользователя или вопрос ИИ. Полный набор сообщений хранится в `original_memory.data.messages`. Ответы пользователя дополнительно могут сохраняться как `interview_answer`.
+Дословная реплика пользователя или агента. Полный набор сообщений хранится в `original_memory.data.messages`. Ответы пользователя дополнительно могут сохраняться как `interview_answer`.
 
 ### ChangeSet
 
@@ -83,7 +191,7 @@ Diary Session является первичным входным контуро�
 
 ### Hypothesis
 
-Проверяемое предположение. Обязательны основания, уровень уверенности и проверочный вопрос или план проверки.
+Проверяемое предположение. Обязательны основания, confidence и проверочный вопрос или план проверки.
 
 ### Verification
 
@@ -95,7 +203,7 @@ Diary Session является первичным входным контуро�
 
 ### Principle
 
-Осмысленный вывод или правило. Может быть личным, парным или универсальным. Должен ссылаться на Pattern/Fact/Perspective.
+Осмысленный вывод или правило. Может быть личным, парным или универсальным. Должен ссылаться на Pattern, Fact или Perspective.
 
 ## Модель действия
 
@@ -113,26 +221,24 @@ Action — запись `kind=action` с полями `data`:
 }
 ```
 
-Восприятия и последствия не записываются в Action как единая истина; они создаются отдельными Perspective/Fact-записями.
+Восприятия и последствия не записываются в Action как единая истина; они создаются отдельными Perspective и Fact.
 
 ## Модель личности
 
 Person остаётся идентификатором человека. Изменяемые характеристики хранятся как `kind=person_facet`:
 
-- value
-- need
-- boundary
-- belief
-- role
-- goal
-- preference
-- trigger
-- care_language
-- protection_strategy
-- contradiction
-- life_period
-
-Это позволяет хранить источник, перспективу и историю каждого свойства отдельно.
+- value;
+- need;
+- boundary;
+- belief;
+- role;
+- goal;
+- preference;
+- trigger;
+- care_language;
+- protection_strategy;
+- contradiction;
+- life_period.
 
 ## Состояние отношений
 
@@ -153,23 +259,19 @@ Person остаётся идентификатором человека. Изм�
 
 Значения являются оценками конкретного владельца перспективы или совместно подтверждённой оценкой.
 
-## Интервью
-
-- `interview_session` — тема, участники, сценарий, состояние и канал `ai_diary|structured_interview`.
-- `interview_question` — вопрос, цель, связь с гипотезой.
-- `interview_answer` — исходный ответ и владелец перспективы.
-- `verification` — результат проверки.
-
-## Книга
-
-- `book_chapter` — глава и её scope.
-- `principle` — принцип, включаемый в главу.
-- `narrative_fragment` — фрагмент истории с provenance.
-
 ## Память
 
-- `original_memory` — неизменяемый исходник.
-- `semantic_memory` — извлечённые сущности и связи.
-- `living_memory` — актуальное понимание с датой и основаниями.
+- `original_memory` — неизменяемый подтверждённый исходник;
+- `semantic_memory` — извлечённые сущности и связи;
+- `living_memory` — актуальное понимание с датой, perspective owner и основаниями.
 
 Living Memory не удаляет Original Memory и не является фактом без подтверждения.
+
+## Invariants
+
+- Messenger data and Domain data are separated.
+- AgentResponse cannot become Fact directly.
+- `memoryRefs` point only to records visible to the current owner.
+- Different Perspective owners cannot be merged implicitly.
+- Agent runtime has no direct Repository write operation.
+- Product version can change without changing domain schema version.

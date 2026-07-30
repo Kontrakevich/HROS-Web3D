@@ -1,176 +1,222 @@
 # HROS — Human Relationship Operating System
 
-## HROS COMMAND: Living World Playtest
+## HROS v1.2 — Messenger & GPT Agents
 
-HROS — живая система понимания людей, памяти и отношений. Она превращает добровольный диалог человека с ИИ-дневником в проверяемую, редактируемую и развивающуюся карту людей, моментов, перспектив и взаимного влияния.
+HROS превращает добровольный диалог человека с ИИ в проверяемую, редактируемую и развивающуюся карту людей, моментов, перспектив, памяти и взаимного влияния.
 
 > Давай мы оба будем понимать, как наши действия влияют друг на друга и к чему это приводит.
 
 ## Главный пользовательский цикл
 
 ```text
-Живой диалог с ИИ-дневником
-→ неизменяемый транскрипт
-→ предлагаемые факты, перспективы и связи
-→ редактируемый Change Set
+Полноэкранный HROS Messenger
+→ диалог с выбранным GPT-агентом
+→ чтение релевантной памяти HROS
+→ ответ со ссылками [HROS:record-id]
+→ перевод беседы в Diary Change Set
+→ ручная проверка и редактирование
 → явное подтверждение пользователя
 → обновление HROS
 → персонаж / мир / пути / хроника / точные редакторы
 ```
 
-ИИ-дневник является основным источником данных. Игровой интерфейс помогает увидеть следующее действие, но не меняет модель скрытно.
+ИИ-дневник остаётся основным источником данных. GPT-агент читает память HROS, но не имеет права записывать выводы напрямую.
 
-## Что добавлено в playtest
+## Полноэкранный Messenger
 
-- новая игровая навигация `Сегодня · Дневник · Мир · Аватар · Пути · Хроника · Система`;
-- экран `Сегодня` с одним главным CTA;
-- автоматический переход к активной diary session или Change Set;
-- карточка персонажа и активного пути;
-- добровольные миссии без серии и штрафа;
-- Living World preview ближайших людей;
-- процедурный low-poly avatar editor;
-- роли, палитры, модификаторы и relationship context preview;
-- локальная галерея Appearance Versions с восстановлением формы;
-- пути развития, которые можно переключать без потери истории;
-- хроника подтверждённых моментов;
-- быстрый доступ ко всем прежним точным редакторам;
-- три визуальные темы: `Family`, `Adventure`, `Strategy`;
-- режим уменьшенной анимации;
-- desktop и mobile layout.
+Раздел `Дневник` открывается на весь экран и использует знакомую архитектуру современного мессенджера:
 
-## Правила геймификации
+- список бесед;
+- поиск;
+- закрепление и отключение уведомлений;
+- отдельные чаты с агентами;
+- сообщения, время и статусы доставки;
+- ответ, редактирование, копирование и удаление;
+- локальные метаданные вложений;
+- typing indicator;
+- адаптивный composer;
+- desktop и mobile layout;
+- правая панель агента и использованной памяти;
+- экспорт беседы в JSON;
+- кнопка `Зафиксировать`, создающая проверяемый Change Set.
 
-Прогресс допустим для роли, навыка, проекта, пути, привычки и подтверждённого действия.
+Интерфейс использует общие UX-паттерны Telegram-подобного мессенджера, но не копирует бренд, графику, ассеты или исходный код Telegram.
 
-HROS не создаёт:
+## GPT-агенты
 
-- общий уровень человека;
-- рейтинг партнёра или родителя;
-- силу любви одной цифрой;
-- штраф за паузу;
-- награду за раскрытие приватных данных;
-- скрытое подтверждение AI-вывода.
+| Агент | Назначение |
+|---|---|
+| ИИ-дневник | Свободный рассказ, уточнения и подготовка Change Set |
+| Аналитик отношений | Факты, перспективы, влияние действий и гипотезы |
+| Хранитель памяти | Поиск и сопоставление записей HROS |
+| Навигатор HROS | Люди, моменты, разделы и следующие действия |
+| Агент аватара | Роли, увлечения и обратимая визуальная эволюция |
 
-## Источники интерфейсных принципов
+Каждый агент:
 
-Концепция объединяет общие UX-принципы, а не визуальные материалы игр:
+- получает только релевантный ограниченный Context Envelope;
+- видит статус, confidence и источник записи;
+- не получает приватную перспективу другого человека;
+- не додумывает отсутствующую позицию;
+- отвечает со ссылками `[HROS:record-id]`;
+- не изменяет Repository автоматически;
+- требует Diary Change Set и User Confirmation для записи.
 
-- The Sims — персонаж, режимы, прямое редактирование и история жизни;
-- Brawl Stars — один главный CTA, короткие действия и мобильная ясность;
-- The Battle of Polytopia — low-poly-мир, карта и дерево направлений;
-- Hero Wars — многослойная карточка персонажа и разделение внешности от накопленного развития.
+## Runtime
 
-Полный анализ и продуктовый контракт: `docs/HROS_UI_UX_GAME_DESIGN_v1.md`.
+Backend использует OpenAI Agents SDK.
 
-## Что работает в ядре
+Поддерживаются два защищённых серверных режима:
 
-- первичный раздел `ИИ-дневник`;
-- естественный пошаговый guided-dialogue;
-- изолированный session draft;
-- редактируемый Change Set;
-- обязательное подтверждение перед commit;
-- Original Memory с полным транскриптом;
-- Interview Answer с дословными ответами;
-- provenance до session и исходных сообщений;
-- User Confirmation с accepted/rejected change IDs;
-- Web3D-вселенная людей и связей;
-- редакторы Person, Relationship и Moment;
-- Evidence → Fact → Perspective → Observation → Hypothesis → Verification → Pattern → Principle;
-- Original, Semantic и Living Memory;
-- режим пары;
+### OpenAI
+
+```env
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+### OpenRouter
+
+```env
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL=openai/gpt-5.4-mini
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+```
+
+API-ключи нельзя помещать во frontend, `public/config.js`, LocalStorage или GitHub Pages.
+
+### GitHub Pages
+
+На GitHub Pages работает честный локальный HROS Memory Gateway:
+
+- Messenger полностью доступен;
+- беседы сохраняются в браузере;
+- выполняется поиск по HROS Snapshot;
+- показываются источники;
+- работает перевод в Change Set;
+- локальный ответ не маркируется как GPT.
+
+Для реального GPT-ответа используется Docker/FastAPI deployment с серверным API-ключом.
+
+## API v1.2
+
+- `GET /api/v1/agents` — каталог агентов и статус runtime;
+- `POST /api/v1/agents/chat` — memory-aware agent response;
+- `GET /api/v1/snapshot`;
+- `GET|POST /api/v1/people`;
+- `GET|POST /api/v1/relationships`;
+- `GET|POST /api/v1/moments`;
+- `GET|POST /api/v1/records`;
+- `PATCH|DELETE /api/v1/records/{id}`;
+- `/api/v1/{person|relationship|moment|record}/{id}/revisions`;
+- `/api/v1/diagnostics`.
+
+## COMMAND UI
+
+Основная навигация сохраняется:
+
+```text
+Сегодня · Дневник · Мир · Аватар · Пути · Хроника · Система
+```
+
+`Сегодня` показывает одно главное действие. `Дневник` открывает Messenger. При наличии Change Set главный CTA переводит непосредственно к проверке изменений.
+
+Игровой прогресс допустим только для роли, навыка, проекта, пути, привычки и подтверждённого действия. HROS не создаёт общий рейтинг человека, партнёра, родителя, любви или брака.
+
+## Безопасность данных
+
 - Privacy by default;
-- книга отношений;
-- revisions и diagnostics;
-- LocalStorage adapter и FastAPI/PostgreSQL adapter.
-
-## Ограничения playtest
-
-- настройки аватара и темы хранятся отдельно в LocalStorage;
-- avatar settings пока не являются новой доменной онтологией;
-- progress path — интерфейсный индикатор количества связанных confirmed/observed записей, а не психологическая оценка;
-- внешний LLM пока не подключён;
-- real GLB/VRM avatar и server-side Avatar API не реализованы;
-- API diary commit пока использует последовательный compatibility flow, а не batch transaction endpoint.
+- Original Memory не перезаписывается выводом модели;
+- Fact, Perspective, Observation и Hypothesis остаются разными сущностями;
+- GPT-агент имеет read-only доступ к памяти;
+- API-ключ хранится только на backend;
+- tracing Agents SDK отключён по умолчанию;
+- ни один ответ агента не становится фактом без подтверждения;
+- Messenger не меняет `hros.snapshot.v1` до commit подтверждённого Change Set.
 
 ## Канонические документы
 
-- `docs/HROS_UI_UX_GAME_DESIGN_v1.md`
-- `docs/HROS_IDEOLOGY_AI_DIARY_v1.md`
-- `docs/HROS_BLUEPRINT_v1.md`
-- `docs/HROS_PRODUCT_PRINCIPLES_v1.md`
-- `docs/HROS_DOMAIN_ONTOLOGY_v1.md`
-- `docs/HROS_DATA_LIFECYCLE_v1.md`
-- `docs/HROS_PRIVACY_AND_CONSENT_v1.md`
-- `docs/HROS_SKILL_ARCHITECTURE_v1.md`
-- `docs/HROS_VISUAL_SEMANTICS_v1.md`
-- `docs/HROS_MIGRATION_v0.4_to_v1.md`
-- `docs/HROS_ACCEPTANCE_CRITERIA_v1.md`
-- `docs/HROS_ALIGNMENT_REPORT_v1.md`
+- `docs/HROS_MESSENGER_AND_AGENT_RUNTIME_v1.md`;
+- `docs/HROS_UI_UX_GAME_DESIGN_v1.md`;
+- `docs/HROS_IDEOLOGY_AI_DIARY_v1.md`;
+- `docs/HROS_BLUEPRINT_v1.md`;
+- `docs/HROS_PRODUCT_PRINCIPLES_v1.md`;
+- `docs/HROS_DOMAIN_ONTOLOGY_v1.md`;
+- `docs/HROS_DATA_LIFECYCLE_v1.md`;
+- `docs/HROS_PRIVACY_AND_CONSENT_v1.md`;
+- `docs/HROS_SKILL_ARCHITECTURE_v1.md`;
+- `docs/HROS_VISUAL_SEMANTICS_v1.md`;
+- `docs/HROS_ACCEPTANCE_CRITERIA_v1.md`.
 
-Интерфейсный skill: `skills/hros-game-interface-director/SKILL.md`.
+Skills:
+
+- `skills/ai-diary-session/SKILL.md`;
+- `skills/hros-game-interface-director/SKILL.md`;
+- `skills/hros-messenger-agent-runtime/SKILL.md`.
 
 ## Архитектура
 
 ```text
-AI Diary / Manual Editor / Imports
-                ↓
-        Session & Change Set Layer
-                ↓
-        Repository Service
-          ↙                 ↘
- LocalStorage v1          FastAPI v1
-                                ↓
-                           PostgreSQL
-                ↓
-COMMAND UI
-├── Today
-├── Diary
-├── Living World
-├── Avatar Preview
-├── Paths
-├── Chronicle
-└── System Editors
+HROS Messenger
+├── Diary Agent
+├── Relationship Agent
+├── Memory Agent
+├── Navigator Agent
+└── Avatar Agent
+        ↓
+HROS Memory Gateway
+├── privacy filter
+├── perspective-owner filter
+├── relevance ranking
+└── Context Envelope
+        ↓
+OpenAI Agents SDK
+        ↓
+Agent Response + [HROS:record-id]
+        ↓
+Diary Change Set
+        ↓
+User Confirmation
+        ↓
+Repository Service
+├── LocalStorage v1
+└── FastAPI / PostgreSQL
 ```
 
-## Режимы запуска
+## Запуск
 
 ### GitHub Pages
 
 https://kontrakevich.github.io/HROS-Web3D/
 
-Данные сохраняются в браузере пользователя. Режим предназначен для playtest и личного использования, а не для защищённого совместного хранения пары.
+Этот режим хранит данные в браузере и использует локальный Memory Gateway.
 
-### Docker
+### Docker с GPT-агентами
 
 1. Скопировать `.env.example` в `.env`.
-2. Заменить `POSTGRES_PASSWORD` на длинный случайный пароль.
-3. Запустить `START_HROS.ps1`.
+2. Задать длинный `POSTGRES_PASSWORD`.
+3. Добавить либо `OPENAI_API_KEY`, либо `OPENROUTER_API_KEY`.
+4. Запустить `START_HROS.ps1`.
 
-- приложение: http://localhost:8088
-- API: http://localhost:8000/docs
+Адреса:
 
-## API v1
-
-- `/api/v1/people`
-- `/api/v1/relationships`
-- `/api/v1/moments`
-- `/api/v1/records`
-- `/api/v1/snapshot`
-- `/api/v1/{person|relationship|moment|record}/{id}/revisions`
-- `/api/v1/diagnostics`
+- приложение: `http://localhost:8088`;
+- API: `http://localhost:8000/docs`.
 
 ## Автоматическая проверка
 
-Pipeline выполняет:
+Pipeline проверяет:
 
-1. pytest для API и ontology;
-2. проверку канонических документов и skill contracts;
-3. production build Vite;
-4. browser tests Chromium и WebKit;
-5. открытие HROS COMMAND и экрана `Сегодня`;
-6. переключение тем и пути;
-7. сохранение и восстановление Avatar Appearance Version;
-8. проверку дневника и отсутствия snapshot-изменений до confirmation;
-9. проверку Original Memory и User Confirmation;
-10. проверку прежних редакторов и отсутствие console errors;
-11. deploy только после успешного прохождения всех этапов.
+1. FastAPI, ontology и каталог агентов;
+2. контролируемый `503` без API-ключа;
+3. канонические документы и skills;
+4. production build Vite;
+5. полноэкранное открытие Messenger;
+6. локальный memory-aware ответ и HROS source references;
+7. отсутствие snapshot mutation во время чата;
+8. desktop и mobile layout;
+9. перевод беседы в Change Set;
+10. User Confirmation, Original Memory и provenance;
+11. прежние редакторы;
+12. Chromium, WebKit и отсутствие console errors;
+13. deploy только после успешных проверок.
