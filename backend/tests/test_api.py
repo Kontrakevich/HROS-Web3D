@@ -18,7 +18,6 @@ def test_health_seed_and_avatar_production_state():
         assert health.status_code == 200
         assert health.json()["version"] == "1.1.0"
         assert health.json()["commandVersion"] == "production-1.1"
-
         data = client.get("/api/v1/snapshot").json()
         assert data["meta"]["schemaVersion"] == "1.1.0"
         assert data["meta"]["commandVersion"] == "production-1.1"
@@ -27,7 +26,6 @@ def test_health_seed_and_avatar_production_state():
         assert data["semanticMemory"] and data["livingMemory"]
         assert data["avatarProfiles"]
         assert len(data["developmentPaths"]) == 4
-
         state = client.get("/api/v1/avatar/state").json()
         assert state["owner"]["id"] == "person-mikhail"
         assert state["profile"]["kind"] == "avatar_profile"
@@ -53,7 +51,6 @@ def test_avatar_change_set_requires_confirmation_and_commits_atomically():
         during = client.get("/api/v1/avatar/state").json()
         assert during["profile"]["version"] == profile_version
         assert len(during["appearances"]) == appearance_count
-
         denied = client.post(f"/api/v1/avatar/change-sets/{change_set['id']}/confirm", json={"confirmed": False})
         assert denied.status_code == 422
         committed = client.post(f"/api/v1/avatar/change-sets/{change_set['id']}/confirm", json={"confirmed": True, "confirmedBy": "person-mikhail"})
@@ -68,7 +65,6 @@ def test_avatar_change_set_requires_confirmation_and_commits_atomically():
         after = client.get("/api/v1/avatar/state").json()
         assert len(after["appearances"]) == appearance_count + 1
         assert after["pendingChangeSet"] is None
-
         repeated = client.post(f"/api/v1/avatar/change-sets/{change_set['id']}/confirm", json={"confirmed": True})
         assert repeated.status_code == 200
         assert repeated.json()["idempotent"] is True
@@ -78,7 +74,8 @@ def test_avatar_change_set_requires_confirmation_and_commits_atomically():
 def test_path_activation_is_persistent_and_exclusive():
     with TestClient(app) as client:
         activated = client.post("/api/v1/paths/partner/activate", json={"ownerId": "person-mikhail"})
-        assert activated.status_code == 200
+        if activated.status_code != 200:
+            raise AssertionError(client.get("/api/v1/diagnostics").json())
         state = activated.json()
         active = [item for item in state["paths"] if item["data"]["active"]]
         assert len(active) == 1
