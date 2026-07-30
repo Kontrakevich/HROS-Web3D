@@ -1,6 +1,6 @@
 # HROS — Human Relationship Operating System
 
-## v1.0 AI Diary Foundation
+## HROS COMMAND: Living World Playtest
 
 HROS — живая система понимания людей, памяти и отношений. Она превращает добровольный диалог человека с ИИ-дневником в проверяемую, редактируемую и развивающуюся карту людей, моментов, перспектив и взаимного влияния.
 
@@ -15,43 +15,86 @@ HROS — живая система понимания людей, памяти �
 → редактируемый Change Set
 → явное подтверждение пользователя
 → обновление HROS
-→ Web3D / timeline / книга
+→ персонаж / мир / пути / хроника / точные редакторы
 ```
 
-ИИ-дневник является основным источником данных. Ручные формы и импорт остаются дополнительными каналами.
+ИИ-дневник является основным источником данных. Игровой интерфейс помогает увидеть следующее действие, но не меняет модель скрытно.
 
-## Что работает
+## Что добавлено в playtest
 
-- отдельный первичный раздел `ИИ-дневник`;
-- естественный пошаговый диалог;
-- изолированный session draft без скрытых изменений основной модели;
-- редактируемый Change Set в конце сессии;
-- включение, исправление и отклонение отдельных предложений;
+- новая игровая навигация `Сегодня · Дневник · Мир · Аватар · Пути · Хроника · Система`;
+- экран `Сегодня` с одним главным CTA;
+- автоматический переход к активной diary session или Change Set;
+- карточка персонажа и активного пути;
+- добровольные миссии без серии и штрафа;
+- Living World preview ближайших людей;
+- процедурный low-poly avatar editor;
+- роли, палитры, модификаторы и relationship context preview;
+- локальная галерея Appearance Versions с восстановлением формы;
+- пути развития, которые можно переключать без потери истории;
+- хроника подтверждённых моментов;
+- быстрый доступ ко всем прежним точным редакторам;
+- три визуальные темы: `Family`, `Adventure`, `Strategy`;
+- режим уменьшенной анимации;
+- desktop и mobile layout.
+
+## Правила геймификации
+
+Прогресс допустим для роли, навыка, проекта, пути, привычки и подтверждённого действия.
+
+HROS не создаёт:
+
+- общий уровень человека;
+- рейтинг партнёра или родителя;
+- силу любви одной цифрой;
+- штраф за паузу;
+- награду за раскрытие приватных данных;
+- скрытое подтверждение AI-вывода.
+
+## Источники интерфейсных принципов
+
+Концепция объединяет общие UX-принципы, а не визуальные материалы игр:
+
+- The Sims — персонаж, режимы, прямое редактирование и история жизни;
+- Brawl Stars — один главный CTA, короткие действия и мобильная ясность;
+- The Battle of Polytopia — low-poly-мир, карта и дерево направлений;
+- Hero Wars — многослойная карточка персонажа и разделение внешности от накопленного развития.
+
+Полный анализ и продуктовый контракт: `docs/HROS_UI_UX_GAME_DESIGN_v1.md`.
+
+## Что работает в ядре
+
+- первичный раздел `ИИ-дневник`;
+- естественный пошаговый guided-dialogue;
+- изолированный session draft;
+- редактируемый Change Set;
 - обязательное подтверждение перед commit;
 - Original Memory с полным транскриптом;
-- Interview Answer с дословными ответами пользователя;
+- Interview Answer с дословными ответами;
 - provenance до session и исходных сообщений;
 - User Confirmation с accepted/rejected change IDs;
-- атомарный snapshot commit в LocalStorage-режиме;
 - Web3D-вселенная людей и связей;
 - редакторы Person, Relationship и Moment;
-- контур знаний: Evidence → Fact → Perspective → Observation → Hypothesis → Verification → Pattern → Principle;
-- три уровня памяти: Original, Semantic и Living Memory;
-- режим пары с двумя личными и одним совместным пространством;
+- Evidence → Fact → Perspective → Observation → Hypothesis → Verification → Pattern → Principle;
+- Original, Semantic и Living Memory;
+- режим пары;
 - Privacy by default;
 - книга отношений;
 - revisions и diagnostics;
-- LocalStorage adapter и FastAPI/PostgreSQL adapter;
-- backend tests и browser acceptance tests Chromium/WebKit перед deploy.
+- LocalStorage adapter и FastAPI/PostgreSQL adapter.
 
-## Честное ограничение текущей версии
+## Ограничения playtest
 
-Внешняя LLM-оркестрация пока не подключена. Интерфейс работает в безопасном guided-dialogue режиме и не имитирует автоматический интеллектуальный анализ. Подключение извлечения людей, моментов, отношений, наблюдений и гипотез выполняется через `ai-diary-session` и специализированные skills.
-
-Локальный Change Set сохраняется атомарно. API-режим пока использует последовательный compatibility commit через `/api/v1/records`; production-этап требует отдельного server-side batch transaction endpoint.
+- настройки аватара и темы хранятся отдельно в LocalStorage;
+- avatar settings пока не являются новой доменной онтологией;
+- progress path — интерфейсный индикатор количества связанных confirmed/observed записей, а не психологическая оценка;
+- внешний LLM пока не подключён;
+- real GLB/VRM avatar и server-side Avatar API не реализованы;
+- API diary commit пока использует последовательный compatibility flow, а не batch transaction endpoint.
 
 ## Канонические документы
 
+- `docs/HROS_UI_UX_GAME_DESIGN_v1.md`
 - `docs/HROS_IDEOLOGY_AI_DIARY_v1.md`
 - `docs/HROS_BLUEPRINT_v1.md`
 - `docs/HROS_PRODUCT_PRINCIPLES_v1.md`
@@ -64,7 +107,7 @@ HROS — живая система понимания людей, памяти �
 - `docs/HROS_ACCEPTANCE_CRITERIA_v1.md`
 - `docs/HROS_ALIGNMENT_REPORT_v1.md`
 
-Изменение функциональности без синхронного изменения Blueprint, ontology, lifecycle и skill contract считается нарушением процесса.
+Интерфейсный skill: `skills/hros-game-interface-director/SKILL.md`.
 
 ## Архитектура
 
@@ -73,18 +116,21 @@ AI Diary / Manual Editor / Imports
                 ↓
         Session & Change Set Layer
                 ↓
-        Application Services
-                ↓
         Repository Service
           ↙                 ↘
  LocalStorage v1          FastAPI v1
                                 ↓
                            PostgreSQL
                 ↓
- Web3D + 2D Workspace + Book
+COMMAND UI
+├── Today
+├── Diary
+├── Living World
+├── Avatar Preview
+├── Paths
+├── Chronicle
+└── System Editors
 ```
-
-Web3D отвечает за исследование и навигацию. ИИ-дневник отвечает за основной ввод. 2D-интерфейс — за проверку, ручное редактирование, privacy и аудит. Ядро данных не зависит от визуальной сцены.
 
 ## Режимы запуска
 
@@ -92,7 +138,7 @@ Web3D отвечает за исследование и навигацию. ИИ
 
 https://kontrakevich.github.io/HROS-Web3D/
 
-Данные сохраняются в браузере пользователя. Этот режим предназначен для демонстрации и личного использования, а не для защищённого совместного хранения пары.
+Данные сохраняются в браузере пользователя. Режим предназначен для playtest и личного использования, а не для защищённого совместного хранения пары.
 
 ### Docker
 
@@ -121,9 +167,10 @@ Pipeline выполняет:
 2. проверку канонических документов и skill contracts;
 3. production build Vite;
 4. browser tests Chromium и WebKit;
-5. проверку отсутствия snapshot-изменений до diary confirmation;
-6. commit подтверждённой diary session;
-7. проверку Original Memory и User Confirmation;
-8. проверку Knowledge, Couple Mode и Book;
-9. проверку отсутствия console errors;
-10. deploy только после успешного прохождения всех этапов.
+5. открытие HROS COMMAND и экрана `Сегодня`;
+6. переключение тем и пути;
+7. сохранение и восстановление Avatar Appearance Version;
+8. проверку дневника и отсутствия snapshot-изменений до confirmation;
+9. проверку Original Memory и User Confirmation;
+10. проверку прежних редакторов и отсутствие console errors;
+11. deploy только после успешного прохождения всех этапов.
