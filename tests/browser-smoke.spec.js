@@ -23,11 +23,9 @@ test('HROS COMMAND 1.1 stores avatar evolution and paths through the repository'
   });
   page.on('pageerror', (error) => consoleErrors.push(`[${browserName}] ${error.message}`));
 
-  await page.goto('', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('.topbar')).toBeVisible();
-  await page.waitForFunction(() => window.__HROS_V1__?.ready === true);
-  await page.waitForFunction(() => window.__HROS_DIARY__?.ready === true);
-  await page.waitForFunction(() => window.__HROS_COMMAND_UI__?.version === 'production-1.1');
+  await page.goto('http://127.0.0.1:4173/HROS-Web3D/', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__HROS_COMMAND_UI__?.productionReady === true);
+  await expect(page.locator('[data-command-screen="today"]')).toBeVisible();
 
   const initial = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')));
   expect(initial.meta.schemaVersion).toBe('1.1.0');
@@ -36,7 +34,6 @@ test('HROS COMMAND 1.1 stores avatar evolution and paths through the repository'
   expect(initial.developmentPaths).toHaveLength(4);
   expect(initial.records.length).toBeGreaterThan(12);
 
-  await expect(page.locator('[data-command-screen="today"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Сегодня', exact: true })).toBeVisible();
   await expect(page.locator('#commandMainAction')).toHaveCount(1);
   await expect(page.locator('.command-release-badge.production').first()).toContainText('COMMAND 1.1');
