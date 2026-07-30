@@ -38,7 +38,7 @@ test('HROS v1 uses confirmed AI diary sessions and preserves knowledge layers', 
 
   await page.getByRole('button', { name: 'Завершить и проверить' }).click();
   await expect(page.getByRole('heading', { name: 'Проверка изменений' })).toBeVisible();
-  await expect(page.getByText(diaryText, { exact: false })).toBeVisible();
+  await expect(page.locator('.diary-transcript-preview p').filter({ hasText: diaryText })).toBeVisible();
   const recordsDuringReview = await page.evaluate(() => JSON.parse(localStorage.getItem('hros.snapshot.v1')).records.length);
   expect(recordsDuringReview).toBe(initial.records.length);
 
