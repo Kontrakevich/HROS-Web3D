@@ -61,7 +61,7 @@ test('HROS v1 preserves moments and exposes knowledge, couple and book layers', 
   await page.getByRole('button', { name: 'Пара' }).click();
   await expect(page.getByRole('heading', { name: 'Три пространства пары' })).toBeVisible();
   await expect(page.getByText('Совместное пространство')).toBeVisible();
-  await expect(page.getByText('Перспектива Снежи пока не зафиксирована')).toBeVisible();
+  await expect(page.getByText(/Перспектива Снежи.*не зафиксирована/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Книга' }).click();
   await expect(page.getByRole('heading', { name: 'Книга отношений' })).toBeVisible();
