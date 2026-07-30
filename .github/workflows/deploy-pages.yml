@@ -69,14 +69,36 @@ jobs:
           test -f src/v04/core.js
           test -f tests/browser-smoke.spec.js
           test -f playwright.config.js
+          test -f skills/registry.json
+          test -f skills/schemas/hros-skill-envelope.schema.json
+          test -f skills/schemas/hros-domain-record.schema.json
+          test -f skills/moment-engine/SKILL.md
           test -f skills/moment-engine/moment.schema.json
+          test -f skills/person-profile/SKILL.md
+          test -f skills/relationship-state/SKILL.md
+          test -f skills/action-impact/SKILL.md
+          test -f skills/evidence-intake/SKILL.md
+          test -f skills/perspective-capture/SKILL.md
+          test -f skills/interview-engine/SKILL.md
+          test -f skills/memory-projection/SKILL.md
+          test -f skills/book-builder/SKILL.md
+          test -f skills/consent-visibility/SKILL.md
+          test -f skills/n8n-workflow-adapter/SKILL.md
+          test -f skills/diagnostic-package/SKILL.md
           test -f docs/HROS_BLUEPRINT_v1.md
+          test -f docs/HROS_PRODUCT_PRINCIPLES_v1.md
           test -f docs/HROS_DOMAIN_ONTOLOGY_v1.md
+          test -f docs/HROS_DATA_LIFECYCLE_v1.md
           test -f docs/HROS_PRIVACY_AND_CONSENT_v1.md
           test -f docs/HROS_SKILL_ARCHITECTURE_v1.md
+          test -f docs/HROS_VISUAL_SEMANTICS_v1.md
+          test -f docs/HROS_MIGRATION_v0.4_to_v1.md
           test -f docs/HROS_ACCEPTANCE_CRITERIA_v1.md
           node -e "const p=require('./package.json'); if(p.version!=='1.0.0') process.exit(1)"
           grep -q "schemaVersion: '1.0.0'" src/seed.js
+          python -m json.tool skills/registry.json > /dev/null
+          python -m json.tool skills/schemas/hros-skill-envelope.schema.json > /dev/null
+          python -m json.tool skills/schemas/hros-domain-record.schema.json > /dev/null
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
