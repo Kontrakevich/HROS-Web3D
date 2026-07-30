@@ -90,13 +90,13 @@ def ensure_defaults(db: Session, owner_id: str | None = None, commit: bool = Tru
         )
         db.add(profile)
         changed = True
+    existing_paths = db.scalars(select(models.DomainRecord).where(
+        models.DomainRecord.kind == "development_path",
+        models.DomainRecord.perspective_owner_id == person.id,
+    )).all()
+    existing_path_ids = {(item.data or {}).get("pathId") for item in existing_paths}
     for path in PATHS:
-        exists = db.scalar(select(models.DomainRecord).where(
-            models.DomainRecord.kind == "development_path",
-            models.DomainRecord.perspective_owner_id == person.id,
-            models.DomainRecord.data["pathId"].as_string() == path["id"],
-        ))
-        if exists is None:
+        if path["id"] not in existing_path_ids:
             db.add(models.DomainRecord(
                 id=f"development-path-{person.id}-{path['id']}", kind="development_path",
                 statement=f"Путь развития: {path['title']}.",
