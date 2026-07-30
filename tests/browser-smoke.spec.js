@@ -99,8 +99,6 @@ test('HROS COMMAND playtest preserves the AI diary contract and legacy editors',
   expect(mobileOverflow).toBeLessThanOrEqual(1);
 
   await page.locator('#commandMainAction').click();
-  await expect(page.getByRole('heading', { name: 'Живой диалог — основной источник HROS' })).toBeVisible();
-  await page.getByRole('button', { name: 'Начать сессию' }).click();
   await expect(page.getByRole('heading', { name: 'Живой диалог с ИИ-дневником' })).toBeVisible();
   await page.locator('#diaryTopic').fill(`Проверка COMMAND ${browserName}`);
   const diaryText = `Сегодня произошёл важный разговор в ${browserName}. Я почувствовал, что хочу точнее понимать влияние наших действий.`;
