@@ -16,7 +16,12 @@
   "status": "draft|observed|hypothesis|confirmed|finalized|archived|disputed",
   "confidence": 0.0,
   "visibility": "private|shared_with_partner|shared|group",
-  "source": {"kind": "user|voice|message|document|ai|system", "label": "..."},
+  "source": {
+    "kind": "user|voice|message|document|ai|system|ai_diary|user_confirmation",
+    "label": "...",
+    "sessionId": "diary-session-id",
+    "messageId": "diary-message-id"
+  },
   "evidenceIds": [],
   "supportsIds": [],
   "contradictsIds": [],
@@ -27,30 +32,69 @@
 }
 ```
 
+## Diary Session Layer
+
+Diary Session является первичным входным контуром HROS.
+
+### DiarySession
+
+```json
+{
+  "id": "diary-session-id",
+  "state": "active|analyzing|review|awaiting_confirmation|committed|saved_as_draft|rejected|cancelled",
+  "participantId": "person-id",
+  "topic": "...",
+  "startedAt": "ISO-8601",
+  "endedAt": "ISO-8601|null"
+}
+```
+
+До появления отдельной таблицы committed session хранится как `kind=interview_session` с `data.channel=ai_diary`.
+
+### DiaryMessage
+
+Дословная реплика пользователя или вопрос ИИ. Полный набор сообщений хранится в `original_memory.data.messages`. Ответы пользователя дополнительно могут сохраняться как `interview_answer`.
+
+### ChangeSet
+
+Изолированный список Proposed Changes. Не является подтверждённым знанием.
+
+### UserConfirmation
+
+Фиксирует, кто, когда и какие Change Items принял или отклонил. Может храниться как `kind=consent_policy` с `source.kind=user_confirmation`.
+
 ## Уровни знания
 
 ### Evidence
+
 Первичный материал: текст, голос, фотография, переписка, документ, ссылка или метаданные файла. Evidence не содержит окончательного вывода.
 
 ### Fact
+
 Минимальное проверяемое утверждение о произошедшем. Факт ссылается на Evidence и может быть `disputed`.
 
 ### Perspective
+
 Описание намерения, восприятия, чувства или значения от лица конкретного участника. Обязателен `perspectiveOwnerId`.
 
 ### Observation
+
 Осторожное описание повторяемого или значимого признака без причинного вывода.
 
 ### Hypothesis
+
 Проверяемое предположение. Обязательны основания, уровень уверенности и проверочный вопрос или план проверки.
 
 ### Verification
+
 Результат проверки гипотезы: подтверждено, опровергнуто, частично подтверждено или недостаточно данных.
 
 ### Pattern
+
 Повторяющаяся последовательность, подтверждённая несколькими независимыми моментами или источниками.
 
 ### Principle
+
 Осмысленный вывод или правило. Может быть личным, парным или универсальным. Должен ссылаться на Pattern/Fact/Perspective.
 
 ## Модель действия
@@ -111,7 +155,7 @@ Person остаётся идентификатором человека. Изм�
 
 ## Интервью
 
-- `interview_session` — тема, участники, сценарий, состояние.
+- `interview_session` — тема, участники, сценарий, состояние и канал `ai_diary|structured_interview`.
 - `interview_question` — вопрос, цель, связь с гипотезой.
 - `interview_answer` — исходный ответ и владелец перспективы.
 - `verification` — результат проверки.
