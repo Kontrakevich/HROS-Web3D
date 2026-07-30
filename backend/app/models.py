@@ -24,7 +24,6 @@ class EntityMixin:
 
 class Person(EntityMixin, Base):
     __tablename__ = "people"
-
     name: Mapped[str] = mapped_column(String(180), index=True)
     role: Mapped[str] = mapped_column(String(180), default="Человек")
     type: Mapped[str] = mapped_column(String(40), default="other", index=True)
@@ -36,7 +35,6 @@ class Person(EntityMixin, Base):
 
 class Relationship(EntityMixin, Base):
     __tablename__ = "relationships"
-
     source_id: Mapped[str] = mapped_column(String(80), index=True)
     target_id: Mapped[str] = mapped_column(String(80), index=True)
     type: Mapped[str] = mapped_column(String(40), default="personal")
@@ -47,7 +45,6 @@ class Relationship(EntityMixin, Base):
 
 class Moment(EntityMixin, Base):
     __tablename__ = "moments"
-
     title: Mapped[str] = mapped_column(String(240), index=True)
     date: Mapped[str] = mapped_column(String(20), index=True)
     period: Mapped[str] = mapped_column(String(120), default="")
@@ -59,9 +56,23 @@ class Moment(EntityMixin, Base):
     details: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
+class DomainRecord(EntityMixin, Base):
+    __tablename__ = "domain_records"
+    kind: Mapped[str] = mapped_column(String(48), index=True)
+    statement: Mapped[str] = mapped_column(Text, default="")
+    subject_ids: Mapped[list] = mapped_column(JSON, default=list)
+    relationship_ids: Mapped[list] = mapped_column(JSON, default=list)
+    moment_ids: Mapped[list] = mapped_column(JSON, default=list)
+    perspective_owner_id: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
+    visibility: Mapped[str] = mapped_column(String(32), default="private", index=True)
+    evidence_ids: Mapped[list] = mapped_column(JSON, default=list)
+    supports_ids: Mapped[list] = mapped_column(JSON, default=list)
+    contradicts_ids: Mapped[list] = mapped_column(JSON, default=list)
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 class Revision(Base):
     __tablename__ = "revisions"
-
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
     entity_type: Mapped[str] = mapped_column(String(40), index=True)
     entity_id: Mapped[str] = mapped_column(String(80), index=True)
