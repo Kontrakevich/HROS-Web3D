@@ -1,9 +1,10 @@
 {
   "product": "HROS",
-  "contractVersion": "1.0.0",
+  "contractVersion": "1.1.0",
   "skills": [
     {"id":"ai-diary-session","path":"skills/ai-diary-session/SKILL.md"},
     {"id":"hros-game-interface-director","path":"skills/hros-game-interface-director/SKILL.md"},
+    {"id":"avatar-evolution","path":"skills/avatar-evolution/SKILL.md"},
     {"id":"person-profile","path":"skills/person-profile/SKILL.md"},
     {"id":"relationship-state","path":"skills/relationship-state/SKILL.md"},
     {"id":"moment-engine","path":"skills/moment-engine/SKILL.md"},

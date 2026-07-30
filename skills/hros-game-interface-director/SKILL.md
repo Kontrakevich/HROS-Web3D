@@ -2,13 +2,13 @@
 
 ## Назначение
 
-Проектирует, реализует и проверяет игровой пользовательский интерфейс HROS, сохраняя первичность ИИ-дневника, проверяемость данных, приватность и право пользователя подтверждать изменения.
+Проектирует, реализует и проверяет рабочий игровой интерфейс HROS, сохраняя первичность ИИ-дневника, проверяемость данных, privacy, доступ к точным редакторам и право пользователя подтверждать изменения.
 
 ## Контракт
 
 - Skill ID: `hros-game-interface-director`
-- Contract version: `1.0.0`
-- Execution model: deterministic UI composition + explicit user actions
+- Contract version: `1.1.0`
+- Execution model: deterministic UI composition + repository-backed explicit actions
 - n8n compatibility: yes
 
 ## Входы
@@ -16,67 +16,70 @@
 - `productVersion`;
 - `screenId`;
 - `userGoal`;
-- `snapshotSummary` без приватного содержимого, если оно не требуется экрану;
+- `snapshotSummary`;
 - `diarySessionState`;
-- `avatarPreviewSettings`;
+- `avatarState`;
+- `pendingAvatarChangeSet`;
 - `activePathId`;
 - `theme`;
 - `viewport`;
-- `inputMode`;
 - `accessibility.reducedMotion`;
 - `traceId`;
 - `idempotencyKey`.
 
 ## Выходы
 
-- screen information architecture;
+- information architecture;
 - primary CTA;
 - secondary actions;
 - component tree;
+- repository commands;
+- source inspector;
 - responsive rules;
-- navigation destination map;
 - accessibility annotations;
 - game mechanic safety result;
-- acceptance test cases;
+- acceptance tests;
 - diagnostics.
 
 ## Основные правила
 
-1. На одном экране только одно главное действие.
+1. На одном экране одно главное действие.
 2. ИИ-дневник остаётся основным источником данных.
-3. Игровой UI не выполняет скрытый domain commit.
-4. Прогресс не применяется к ценности человека или качеству отношений.
-5. Любой путь, модификатор или награда должен иметь объяснимое основание.
-6. Web3D не блокирует доступ к данным.
-7. Точные редакторы, source, confidence, privacy и revisions остаются доступны.
-8. Навигация работает с мышью, клавиатурой и touch.
-9. Анимация не должна быть обязательной для понимания.
-10. Мобильная версия проектируется одновременно с desktop.
+3. UI не выполняет hidden domain commit.
+4. Avatar change проходит через `avatar-evolution`.
+5. Прогресс не применяется к ценности человека или качеству отношений.
+6. Любой путь или автоматически предложенный модификатор имеет объяснимое основание.
+7. Web3D не блокирует доступ к данным.
+8. Source, confidence, privacy и revisions доступны.
+9. Навигация работает с keyboard, pointer и touch.
+10. Reduced motion сохраняет всю информацию.
+11. Mobile проектируется одновременно с desktop.
+12. Production UI не показывает внутренние playtest-маркеры.
 
 ## Запрещённые механики
 
-- общий human score;
+- human score;
 - love score как единая истина;
 - наказание за пропуск;
-- dark patterns;
-- FOMO;
-- лутбоксы;
-- награды за раскрытие приватного;
-- автоматическое подтверждение AI-вывода;
-- изображение конфликта как визуального уродства человека;
-- недоступность данных без Web3D.
+- dark patterns и FOMO;
+- loot boxes;
+- награда за private disclosure;
+- автоматическое подтверждение AI;
+- визуальное уродование человека из-за конфликта;
+- отсутствие данных без Web3D;
+- сохранение Avatar preview напрямую без Change Set.
 
 ## Порядок работы
 
 ```text
-Получить UX goal
+получить UX goal
 → определить ответственность экрана
 → выбрать primary CTA
 → построить hierarchy
-→ проверить game mechanic safety
+→ связать команды с Repository Service
+→ проверить safety
 → собрать responsive UI
-→ связать с существующими routes
-→ выполнить keyboard/touch check
+→ проверить keyboard/touch/reduced motion
 → выполнить Chromium/WebKit tests
 → сформировать diagnostics
 ```
@@ -85,13 +88,12 @@
 
 - главное действие находится за пять секунд;
 - не более семи основных разделов;
-- на mobile нет горизонтальной прокрутки;
-- touch target не менее 44 px для основных действий;
-- интерфейс не меняет HROS snapshot без предусмотренного domain confirmation;
-- theme switch не меняет информационную архитектуру;
-- reduced motion сохраняет всю информацию;
-- каждый игровой показатель имеет пояснение;
-- старые профессиональные редакторы доступны;
+- touch target не менее 44 px;
+- mobile без горизонтальной прокрутки;
+- theme switch не изменяет domain snapshot;
+- Avatar preview не изменяет profile до confirmation;
+- source inspector доступен;
+- старые редакторы доступны;
 - browser tests не содержат console errors.
 
 ## Диагностика
@@ -100,6 +102,7 @@
 - `NAVIGATION_OVERLOAD`
 - `HUMAN_SCORE_DETECTED`
 - `HIDDEN_COMMIT_ATTEMPT`
+- `AVATAR_CHANGESET_BYPASSED`
 - `UNEXPLAINED_REWARD`
 - `SOURCE_ACCESS_MISSING`
 - `MOBILE_OVERFLOW`
@@ -107,41 +110,16 @@
 - `REDUCED_MOTION_UNSUPPORTED`
 - `LEGACY_EDITOR_UNREACHABLE`
 
-Диагностика не должна содержать private diary content.
-
-## n8n envelope
-
-```json
-{
-  "skill": "hros-game-interface-director",
-  "contractVersion": "1.0.0",
-  "traceId": "uuid",
-  "actorId": "person-id",
-  "workspaceId": "workspace-id",
-  "input": {
-    "screenId": "today",
-    "userGoal": "continue-diary",
-    "theme": "strategy",
-    "viewport": "mobile"
-  },
-  "privacy": {"visibility": "private"},
-  "result": {
-    "primaryAction": {},
-    "componentTree": [],
-    "acceptanceTests": []
-  },
-  "diagnostics": {"status": "ok", "warnings": []}
-}
-```
+Диагностика не содержит private diary content.
 
 ## Совместимость
 
-Взаимодействует с:
-
 - `ai-diary-session`;
+- `avatar-evolution`;
 - `person-profile`;
 - `relationship-state`;
 - `moment-engine`;
 - `memory-projection`;
 - `book-builder`;
-- будущими avatar skills.
+- `consent-visibility`;
+- `diagnostic-package`.

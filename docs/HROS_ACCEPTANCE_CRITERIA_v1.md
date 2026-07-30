@@ -1,113 +1,124 @@
-# HROS v1 — Acceptance Criteria
+# HROS 1.1 — Acceptance Criteria
 
 ## Alignment
 
-- Canonical Blueprint, ideology, ontology, lifecycle, privacy, skills, visual semantics and UI/UX game design are versioned in repository.
-- README and UI display one current product direction.
-- Snapshot and diagnostics use v1 keys and schemaVersion `1.0.0`.
-- Blueprint explicitly defines AI Diary as the primary input.
-- `docs/HROS_UI_UX_GAME_DESIGN_v1.md` is the canonical interface contract.
-- `skills/hros-game-interface-director/SKILL.md` is registered.
+- Blueprint, ideology, ontology, lifecycle, privacy, skills, visual semantics and UI/UX game design are versioned in repository.
+- README and UI display `HROS COMMAND 1.1`.
+- Snapshot and diagnostics use schemaVersion `1.1.0`.
+- Blueprint defines AI Diary as the primary input.
+- `docs/HROS_AVATAR_ONTOLOGY_v1.1.md` is canonical.
+- `docs/HROS_COMMAND_PRODUCTION_v1.1.md` describes the working release.
+- `skills/avatar-evolution/SKILL.md` is registered.
 
 ## Domain
 
-- Person, Relationship and Moment remain compatible with v0.4.
-- System stores Evidence, Fact, Perspective, Observation, Hypothesis, Verification, Pattern, Principle, MemoryRecord, BookChapter and ConsentPolicy.
-- Every knowledge record has provenance, status, confidence, visibility and revision metadata.
+- Person, Relationship, Moment and existing knowledge kinds remain compatible.
+- Every knowledge record has provenance, status, confidence, visibility and version metadata.
 - Perspective requires an owner.
-- Hypothesis remains distinguishable from Fact and cannot be silently promoted.
-- Different perspectives of one moment can coexist.
-- Playtest theme, active path and avatar appearance remain outside the HROS domain snapshot.
+- Hypothesis cannot be silently promoted to Fact.
+- Different perspectives can coexist.
+- System stores `avatar_profile`, `avatar_appearance`, `avatar_change_set`, `avatar_confirmation` and `development_path`.
+- Avatar domain records require a perspective owner.
+- Theme and reduced motion remain outside the domain snapshot.
 
 ## AI Diary
 
 - Navigation exposes `Дневник` as a primary destination.
-- The `Сегодня` CTA routes to the correct diary state: new session, active draft or Change Set review.
-- User can create a diary session and enter a natural-language response.
-- Messages remain outside the main HROS snapshot while session is active or in review.
+- `Сегодня` routes to new session, active draft or Change Set review.
+- Messages remain outside the main snapshot while session is active or in review.
 - Ending a session creates an editable Change Set.
 - User can include, edit or reject each proposed change.
-- Commit button requires explicit confirmation.
-- Confirmation stores accepted and rejected change IDs.
-- Committed session creates Original Memory with the exact transcript.
-- Derived records reference the diary session and Original Memory.
+- Commit requires explicit confirmation.
+- Confirmation stores accepted and rejected IDs.
+- Committed session creates Original Memory with exact transcript.
+- Derived records reference session and Original Memory.
 - No AI draft is promoted silently.
-- UI states clearly whether LLM orchestration is connected or only the safe guided mode is active.
+- UI states whether external LLM orchestration is connected.
 
 ## COMMAND UI
 
-- `Сегодня` is the default playtest screen.
+- `Сегодня` is the default screen.
 - The screen contains exactly one dominant primary action.
-- Top-level game navigation contains no more than seven destinations.
-- Desktop uses a side command rail.
-- Mobile uses a bottom navigation bar with touch-sized controls.
-- Navigation exposes Today, Diary, World, Avatar, Paths, Chronicle and System.
-- Existing professional editors remain reachable through System.
-- Theme selection supports Family, Adventure and Strategy without changing information architecture.
-- Theme and reduced-motion preferences persist outside the domain snapshot.
-- Reduced motion removes non-essential animation while preserving all information.
-- Layout at 390 CSS px does not create horizontal document overflow.
-- Web3D is available through World but is not required for data editing.
+- Top-level navigation contains no more than seven destinations.
+- Desktop uses side rail; mobile uses bottom navigation.
+- Today, Diary, World, Avatar, Paths, Chronicle and System are available.
+- Existing professional editors remain reachable.
+- Family, Adventure and Strategy themes preserve information architecture.
+- Reduced motion removes non-essential motion without removing information.
+- Layout at 390 CSS px has no horizontal document overflow.
+- Web3D is available through World but not required for editing.
+- Production UI does not show internal playtest labels.
 
-## Avatar Playtest
+## Avatar
 
-- User can select base form, active role, palette and optional modifiers.
-- User can preview a relationship context independently of Identity Core.
-- Relationship context changes aura or environment, not the value, face or body of the person.
-- User can save a local Appearance Version.
-- User can restore a previous Appearance Version.
-- Appearance history is stored in `hros.avatar.appearance.history.v1`.
-- Saving or restoring an appearance does not modify `hros.snapshot.v1`.
-- UI explicitly labels avatar data as a local playtest preview until Avatar Ontology is canonicalized.
+- User can select base form, role, palette and modifiers.
+- User can preview relationship context independently of Identity Core.
+- Relationship context changes aura/environment, not value, face or body.
+- Preview does not change `avatar_profile`.
+- Saving creates `avatar_change_set` with state `awaiting_confirmation`.
+- Review displays previous and proposed forms and evidence.
+- Commit is disabled until explicit confirmation.
+- Confirm atomically updates profile, creates immutable appearance and confirmation, and finalizes Change Set.
+- Reject leaves profile unchanged.
+- Repeated confirm is idempotent and creates no duplicate appearance.
+- Previous Appearance Version remains visible in Chronicle.
+- Restoring a previous form creates a new Change Set.
+- AI/system proposal without evidence is rejected.
+- Avatar records default to private.
 
-## Paths and Gamification
+## Paths and gamification
 
 - User can choose one active path.
-- Switching paths does not delete the history or progress of other paths.
-- Path progress is explicitly described as a count-based interface indicator derived from related confirmed/observed records.
+- Exactly one path is active per owner.
+- Switching paths does not delete history or progress of other paths.
+- Path progress is described as an interface indicator based on related records.
 - No human score, partner score, parent score or love score is displayed.
 - No streak penalty, loot box, FOMO timer or reward for private disclosure is present.
-- Missions are voluntary and route directly to the relevant action.
+- Missions are voluntary and route directly to relevant actions.
 
 ## Product
 
-- User can view the knowledge pipeline and create a record with kind, statement, perspective, visibility and links.
-- User can open a Book view containing principles and their provenance.
-- Privacy status is visible in the UI.
-- Original, Semantic and Living Memory are displayed separately.
-- Web3D remains available and does not own persistence logic.
-- Chronicle displays confirmed moments with source/status context.
+- Knowledge pipeline and manual record editor remain operational.
+- Book contains principles and provenance.
+- Privacy status is visible.
+- Original, Semantic and Living Memory are separate.
+- Chronicle displays confirmed moments and Avatar Appearance Versions.
+- Web3D does not own persistence logic.
 
 ## API
 
-- `GET|POST /api/v1/records` works.
-- `PATCH|DELETE /api/v1/records/{id}` works with revisions.
-- Snapshot groups records by kind.
-- Reset restores v1 seed.
-- Diagnostics expose version and operational events without private content.
-- Production target includes a server-side transactional Diary Change Set endpoint; sequential record commit remains compatibility mode until implemented.
-- Avatar settings remain local until Avatar Ontology, repository and API contracts are approved.
+- Existing People, Relationships, Moments, Records, Snapshot, Revisions and Diagnostics endpoints work.
+- `GET /api/v1/avatar/state` returns owner, profile, appearances, pending Change Set and paths.
+- `POST /api/v1/avatar/change-sets` creates draft without changing profile.
+- `POST /api/v1/avatar/change-sets/{id}/confirm` requires `confirmed=true` and is idempotent.
+- `POST /api/v1/avatar/change-sets/{id}/reject` leaves profile unchanged.
+- `POST /api/v1/paths/{path_id}/activate` persists exclusive active path.
+- API confirmation uses one transaction.
+- Diagnostics do not expose private content.
 
 ## Migration
 
-- Existing v0.2/v0.4 local snapshot migrates automatically without deleting the source key.
+- Existing 1.0 local snapshot migrates automatically to 1.1.
 - Existing entity IDs and counts are retained.
+- Playtest avatar configuration migrates to Avatar Profile.
+- Playtest appearance history migrates to immutable Avatar Appearance records.
+- Playtest active path migrates to Development Path.
 - Migration is idempotent.
-- COMMAND UI preferences do not alter migration behavior.
+- UI-only theme and reduced-motion preferences do not alter domain migration.
 
 ## Verification
 
 - Backend tests pass.
 - Production build passes.
 - Chromium and WebKit open the deployed base path.
-- Browser test verifies `schemaVersion=1.0.0`.
-- Browser test waits for `window.__HROS_COMMAND_UI__.ready`.
-- Browser test opens the default Today screen and finds one dominant CTA.
-- Browser test changes theme and verifies no snapshot mutation.
-- Browser test saves and restores an Appearance Version and verifies no snapshot mutation.
-- Browser test switches the active path and verifies no snapshot mutation.
-- Browser test checks the 390 px mobile layout and absence of horizontal overflow.
-- Browser test verifies no snapshot changes before diary confirmation.
-- Browser test commits a diary session and finds its Original Memory.
-- Browser test verifies Knowledge view, creation/persistence of a Perspective, Couple Mode, Book and zero console errors.
+- Browser test verifies schemaVersion `1.1.0` and production command version.
+- Browser test finds one dominant Today CTA.
+- Browser test changes theme without snapshot mutation.
+- Browser test creates Avatar Change Set and verifies no profile mutation during review.
+- Browser test confirms and finds updated profile, immutable appearance and confirmation.
+- Browser test activates an exclusive path.
+- Browser test verifies Chronicle and 390px mobile layout.
+- Browser test verifies no diary snapshot changes before confirmation.
+- Browser test commits diary session and finds Original Memory.
+- Browser test verifies Knowledge view and zero console errors.
 - GitHub Pages deploy runs only after all checks succeed.

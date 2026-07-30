@@ -35,7 +35,7 @@ jobs:
         working-directory: backend
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
 
-      - name: Test HROS v1 API and ontology
+      - name: Test HROS 1.1 API and ontology
         working-directory: backend
         run: python -m pytest -q
 
@@ -55,28 +55,30 @@ jobs:
       - name: Runtime diagnostics
         run: node --version && npm --version && python --version
 
-      - name: Verify canonical HROS v1 source tree
+      - name: Verify canonical HROS 1.1 source tree
         run: |
           test -f src/main.js
           test -f src/style.css
           test -f src/repository.js
           test -f src/domain-v1.js
           test -f src/alignment-v1.js
-          test -f src/alignment-v1.css
           test -f src/diary-v1.js
-          test -f src/diary-v1.css
           test -f src/scene.js
+          test -f src/avatar-scene-v1.js
+          test -f src/command-ui-v1.js
+          test -f src/command-production-v1.js
+          test -f src/command-production-v1.css
           test -f src/v03-editor.js
           test -f src/v04-moments.js
-          test -f src/v04/core.js
           test -f tests/browser-smoke.spec.js
           test -f playwright.config.js
           test -f skills/registry.json
           test -f skills/schemas/hros-skill-envelope.schema.json
           test -f skills/schemas/hros-domain-record.schema.json
           test -f skills/ai-diary-session/SKILL.md
+          test -f skills/hros-game-interface-director/SKILL.md
+          test -f skills/avatar-evolution/SKILL.md
           test -f skills/moment-engine/SKILL.md
-          test -f skills/moment-engine/moment.schema.json
           test -f skills/person-profile/SKILL.md
           test -f skills/relationship-state/SKILL.md
           test -f skills/action-impact/SKILL.md
@@ -92,21 +94,27 @@ jobs:
           test -f docs/HROS_BLUEPRINT_v1.md
           test -f docs/HROS_PRODUCT_PRINCIPLES_v1.md
           test -f docs/HROS_DOMAIN_ONTOLOGY_v1.md
+          test -f docs/HROS_AVATAR_ONTOLOGY_v1.1.md
+          test -f docs/HROS_COMMAND_PRODUCTION_v1.1.md
           test -f docs/HROS_DATA_LIFECYCLE_v1.md
           test -f docs/HROS_PRIVACY_AND_CONSENT_v1.md
           test -f docs/HROS_SKILL_ARCHITECTURE_v1.md
           test -f docs/HROS_VISUAL_SEMANTICS_v1.md
-          test -f docs/HROS_MIGRATION_v0.4_to_v1.md
+          test -f docs/HROS_UI_UX_GAME_DESIGN_v1.md
           test -f docs/HROS_ACCEPTANCE_CRITERIA_v1.md
-          test -f docs/HROS_ALIGNMENT_REPORT_v1.md
-          node -e "const p=require('./package.json'); if(p.version!=='1.0.0') process.exit(1)"
-          grep -q "schemaVersion: '1.0.0'" src/seed.js
+          node -e "const p=require('./package.json'); if(p.version!=='1.1.0') process.exit(1)"
+          grep -q "HROS_VERSION = '1.1.0'" src/domain-v1.js
+          grep -q "avatar_change_set" src/domain-v1.js
           grep -q "Живой диалог" docs/HROS_BLUEPRINT_v1.md
-          grep -q "awaiting_confirmation" docs/HROS_DATA_LIFECYCLE_v1.md
-          grep -q '"ai-diary-session"' skills/registry.json
+          grep -q "avatar-evolution" skills/registry.json
           python -m json.tool skills/registry.json > /dev/null
           python -m json.tool skills/schemas/hros-skill-envelope.schema.json > /dev/null
           python -m json.tool skills/schemas/hros-domain-record.schema.json > /dev/null
+          node --check src/domain-v1.js
+          node --check src/repository.js
+          node --check src/avatar-scene-v1.js
+          node --check src/command-ui-v1.js
+          node --check src/command-production-v1.js
           node --check src/diary-v1.js
 
       - name: Install dependencies
@@ -121,7 +129,7 @@ jobs:
       - name: Install Playwright smoke-test runtime
         run: npm install --no-save --no-package-lock @playwright/test@1.62.0 && npx playwright install --with-deps chromium webkit
 
-      - name: Browser acceptance test — Chromium and WebKit
+      - name: Browser acceptance — Chromium and WebKit
         run: |
           npm run preview > /tmp/hros-preview.log 2>&1 &
           PREVIEW_PID=$!
@@ -132,7 +140,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: hros-v1-diary-browser-diagnostics-${{ github.run_id }}
+          name: hros-1.1-browser-diagnostics-${{ github.run_id }}
           path: |
             test-results
             playwright-report
@@ -178,13 +186,13 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
         run: |
-          python - <<'PY'
+          python - <<'PY_STATUS'
           import json,os,urllib.request
           event=os.environ['EVENT_NAME'];test=os.environ['TEST_RESULT'];build=os.environ['BUILD_RESULT'];deploy=os.environ['DEPLOY_RESULT']
           successful=test=='success' and build=='success' and (event=='pull_request' or deploy=='success')
           context='hros/ci' if event=='pull_request' else 'hros/pages-pipeline'
-          payload=json.dumps({'state':'success' if successful else 'failure','context':context,'description':f'v1 diary={test}; build+browser={build}; deploy={deploy}'[:140],'target_url':os.environ['RUN_URL']}).encode()
+          payload=json.dumps({'state':'success' if successful else 'failure','context':context,'description':f'1.1 api={test}; build+browser={build}; deploy={deploy}'[:140],'target_url':os.environ['RUN_URL']}).encode()
           request=urllib.request.Request(f"https://api.github.com/repos/{os.environ['REPOSITORY']}/statuses/{os.environ['COMMIT_SHA']}",data=payload,method='POST',headers={'Accept':'application/vnd.github+json','Authorization':f"Bearer {os.environ['GH_TOKEN']}",'Content-Type':'application/json','User-Agent':'HROS-CI','X-GitHub-Api-Version':'2022-11-28'})
           with urllib.request.urlopen(request,timeout=30) as response:print(response.status,response.read().decode()[:300])
           if not successful:raise SystemExit(1)
-          PY
+          PY_STATUS

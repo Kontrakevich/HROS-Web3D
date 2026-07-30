@@ -1,4 +1,4 @@
-export const HROS_VERSION = '1.0.0';
+export const HROS_VERSION = '1.1.0';
 export const STORAGE_KEY_V1 = 'hros.snapshot.v1';
 export const LEGACY_STORAGE_KEYS = ['hros.snapshot.v0.2'];
 export const DIAGNOSTICS_KEY_V1 = 'hros.diagnostics.v1';
@@ -8,7 +8,9 @@ export const RECORD_KINDS = [
   'observation', 'hypothesis', 'verification', 'pattern', 'principle',
   'original_memory', 'semantic_memory', 'living_memory',
   'interview_session', 'interview_question', 'interview_answer',
-  'book_chapter', 'narrative_fragment', 'consent_policy'
+  'book_chapter', 'narrative_fragment', 'consent_policy',
+  'avatar_profile', 'avatar_appearance', 'avatar_change_set', 'avatar_confirmation',
+  'development_path'
 ];
 
 export const KIND_COLLECTIONS = {
@@ -19,7 +21,10 @@ export const KIND_COLLECTIONS = {
   semantic_memory: 'semanticMemory', living_memory: 'livingMemory',
   interview_session: 'interviewSessions', interview_question: 'interviewQuestions',
   interview_answer: 'interviewAnswers', book_chapter: 'bookChapters',
-  narrative_fragment: 'narrativeFragments', consent_policy: 'consentPolicies'
+  narrative_fragment: 'narrativeFragments', consent_policy: 'consentPolicies',
+  avatar_profile: 'avatarProfiles', avatar_appearance: 'avatarAppearances',
+  avatar_change_set: 'avatarChangeSets', avatar_confirmation: 'avatarConfirmations',
+  development_path: 'developmentPaths'
 };
 
 const now = () => new Date().toISOString();
@@ -40,10 +45,10 @@ export function normalizeRecord(input = {}) {
     confidence: Math.max(0, Math.min(1, Number(input.confidence ?? 1))),
     visibility: input.visibility || 'private',
     source: { kind: 'user', label: 'HROS', ...(input.source || {}) },
-    evidenceIds: Array.isArray(input.evidenceIds) ? input.evidenceIds : [],
-    supportsIds: Array.isArray(input.supportsIds) ? input.supportsIds : [],
-    contradictsIds: Array.isArray(input.contradictsIds) ? input.contradictsIds : [],
-    data: input.data && typeof input.data === 'object' ? input.data : {},
+    evidenceIds: Array.isArray(input.evidenceIds) ? [...new Set(input.evidenceIds)] : [],
+    supportsIds: Array.isArray(input.supportsIds) ? [...new Set(input.supportsIds)] : [],
+    contradictsIds: Array.isArray(input.contradictsIds) ? [...new Set(input.contradictsIds)] : [],
+    data: input.data && typeof input.data === 'object' ? clone(input.data) : {},
     version: Number(input.version || 1),
     createdAt,
     updatedAt: input.updatedAt || createdAt
@@ -98,11 +103,18 @@ export function validateSnapshotV1(snapshot) {
   const people = new Set((snapshot.people || []).map((item) => item.id));
   const relationships = new Set((snapshot.relationships || []).map((item) => item.id));
   const moments = new Set((snapshot.moments || []).map((item) => item.id));
+  const records = new Set((snapshot.records || []).map((item) => item.id));
   for (const record of snapshot.records || []) {
     if (record.kind === 'perspective' && !record.perspectiveOwnerId) errors.push(`Perspective ${record.id} не имеет владельца`);
+    if (['avatar_profile', 'avatar_appearance', 'avatar_change_set', 'avatar_confirmation', 'development_path'].includes(record.kind) && !record.perspectiveOwnerId) errors.push(`${record.kind} ${record.id} не имеет владельца`);
+    if (record.kind === 'avatar_profile' && (!record.data?.base || !record.data?.role || !record.data?.palette)) errors.push(`Avatar profile ${record.id} не содержит базовую конфигурацию`);
+    if (record.kind === 'development_path' && !record.data?.pathId) errors.push(`Development path ${record.id} не содержит pathId`);
     for (const id of record.subjectIds || []) if (!people.has(id)) errors.push(`Record ${record.id}: неизвестный person ${id}`);
     for (const id of record.relationshipIds || []) if (!relationships.has(id)) errors.push(`Record ${record.id}: неизвестная relationship ${id}`);
     for (const id of record.momentIds || []) if (!moments.has(id)) errors.push(`Record ${record.id}: неизвестный moment ${id}`);
+    for (const id of [...(record.evidenceIds || []), ...(record.supportsIds || []), ...(record.contradictsIds || [])]) {
+      if (!records.has(id) && !moments.has(id) && !id.startsWith('pending-')) errors.push(`Record ${record.id}: неизвестное основание ${id}`);
+    }
   }
   return errors;
 }
@@ -121,6 +133,6 @@ export function migrateLocalStorage(seedSnapshot, recordDiagnostic = () => {}) {
   const errors = validateSnapshotV1(snapshot);
   if (errors.length) throw new Error(`HROS v1 migration: ${errors.join('; ')}`);
   localStorage.setItem(STORAGE_KEY_V1, JSON.stringify(snapshot));
-  if (sourceKey !== STORAGE_KEY_V1) recordDiagnostic('info', 'migration.v0.4_to_v1', { sourceKey, targetKey: STORAGE_KEY_V1 });
+  if (sourceKey !== STORAGE_KEY_V1 || source?.meta?.schemaVersion !== HROS_VERSION) recordDiagnostic('info', 'migration.to_v1.1', { sourceKey, targetKey: STORAGE_KEY_V1, schemaVersion: HROS_VERSION });
   return snapshot;
 }
