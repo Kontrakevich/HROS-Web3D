@@ -1,6 +1,6 @@
 # HROS — Human Relationship Operating System
 
-## HROS COMMAND: Living World Playtest
+## HROS COMMAND: Full Living World Playtest 2
 
 HROS — живая система понимания людей, памяти и отношений. Она превращает добровольный диалог человека с ИИ-дневником в проверяемую, редактируемую и развивающуюся карту людей, моментов, перспектив и взаимного влияния.
 
@@ -9,34 +9,104 @@ HROS — живая система понимания людей, памяти �
 ## Главный пользовательский цикл
 
 ```text
-Живой диалог с ИИ-дневником
-→ неизменяемый транскрипт
+Быстрая запись или живой диалог
+→ локальный черновик / неизменяемый транскрипт
+→ ИИ-дневник
 → предлагаемые факты, перспективы и связи
 → редактируемый Change Set
 → явное подтверждение пользователя
 → обновление HROS
-→ персонаж / мир / пути / хроника / точные редакторы
+→ персонаж / Living World / пути / хроника / точные редакторы
 ```
 
-ИИ-дневник является основным источником данных. Игровой интерфейс помогает увидеть следующее действие, но не меняет модель скрытно.
+ИИ-дневник остаётся основным источником данных. Quick Capture, игровой интерфейс и аватар помогают начать действие и исследовать подтверждённую модель, но не изменяют её скрытно.
 
-## Что добавлено в playtest
+## Full Playtest 2
 
-- новая игровая навигация `Сегодня · Дневник · Мир · Аватар · Пути · Хроника · Система`;
-- экран `Сегодня` с одним главным CTA;
-- автоматический переход к активной diary session или Change Set;
-- карточка персонажа и активного пути;
-- добровольные миссии без серии и штрафа;
-- Living World preview ближайших людей;
-- процедурный low-poly avatar editor;
-- роли, палитры, модификаторы и relationship context preview;
-- локальная галерея Appearance Versions с восстановлением формы;
-- пути развития, которые можно переключать без потери истории;
-- хроника подтверждённых моментов;
-- быстрый доступ ко всем прежним точным редакторам;
-- три визуальные темы: `Family`, `Adventure`, `Strategy`;
-- режим уменьшенной анимации;
-- desktop и mobile layout.
+Вторая тестовая сборка проверяет полный продуктовый цикл, а не отдельные экраны.
+
+### Сегодня
+
+- один главный diary CTA;
+- Quick Capture;
+- локальные входящие;
+- состояние подтверждённых данных, гипотез и черновиков;
+- Relationship Pulse с последними подтверждёнными моментами;
+- встроенный сценарий тестирования.
+
+### Quick Capture и Inbox
+
+```text
+Быстрая запись
+→ локальный inbox draft
+→ ручная правка
+→ передача в форму ИИ-дневника
+→ Change Set
+→ подтверждение
+→ commit
+```
+
+Quick Capture не пишет напрямую в `hros.snapshot.v1`.
+
+### Living World v2
+
+- шесть областей жизни;
+- люди внутри областей;
+- поиск и фильтрация;
+- карточка выбранного человека;
+- значение связи;
+- последние моменты;
+- перспективы и действия;
+- Source Inspector;
+- переход в Web3D.
+
+### Source Inspector
+
+Показывает:
+
+- entity type и kind;
+- statement или meaning;
+- ID;
+- status;
+- confidence;
+- visibility;
+- version;
+- source label и source kind;
+- timestamps;
+- связанные ID.
+
+### Аватар
+
+- базовая форма, роль, палитра и модификаторы;
+- relationship-context preview;
+- локальная галерея Appearance Versions;
+- предложения из существующих records;
+- просмотр оснований до примерки;
+- отсутствие скрытых изменений Identity Core.
+
+### Пути и хроника
+
+- переключение пути без удаления истории;
+- открываемые основания прогресса;
+- поиск и фильтры хроники;
+- экспорт подтверждённых моментов и форм аватара;
+- гипотезы не становятся сюжетными фактами.
+
+### Система и playtest
+
+- точные редакторы People, Moments, Knowledge, Couple, Book и Diagnostics;
+- экспорт полного snapshot;
+- безопасный сброс только playtest-настроек;
+- структурированный feedback;
+- экспорт feedback в JSON.
+
+## Навигация
+
+```text
+Сегодня · Дневник · Мир · Аватар · Пути · Хроника · Система
+```
+
+Desktop использует command rail. Mobile использует нижнюю навигацию без горизонтальной прокрутки.
 
 ## Правила геймификации
 
@@ -48,24 +118,22 @@ HROS не создаёт:
 - рейтинг партнёра или родителя;
 - силу любви одной цифрой;
 - штраф за паузу;
+- FOMO и лутбоксы;
 - награду за раскрытие приватных данных;
 - скрытое подтверждение AI-вывода.
 
 ## Источники интерфейсных принципов
 
-Концепция объединяет общие UX-принципы, а не визуальные материалы игр:
+Используются общие UX-принципы, а не визуальные материалы игр:
 
 - The Sims — персонаж, режимы, прямое редактирование и история жизни;
 - Brawl Stars — один главный CTA, короткие действия и мобильная ясность;
 - The Battle of Polytopia — low-poly-мир, карта и дерево направлений;
 - Hero Wars — многослойная карточка персонажа и разделение внешности от накопленного развития.
 
-Полный анализ и продуктовый контракт: `docs/HROS_UI_UX_GAME_DESIGN_v1.md`.
-
 ## Что работает в ядре
 
-- первичный раздел `ИИ-дневник`;
-- естественный пошаговый guided-dialogue;
+- AI Diary guided-dialogue;
 - изолированный session draft;
 - редактируемый Change Set;
 - обязательное подтверждение перед commit;
@@ -83,17 +151,32 @@ HROS не создаёт:
 - revisions и diagnostics;
 - LocalStorage adapter и FastAPI/PostgreSQL adapter.
 
-## Ограничения playtest
+## Локальные ключи Full Playtest
 
-- настройки аватара и темы хранятся отдельно в LocalStorage;
-- avatar settings пока не являются новой доменной онтологией;
-- progress path — интерфейсный индикатор количества связанных confirmed/observed записей, а не психологическая оценка;
-- внешний LLM пока не подключён;
-- real GLB/VRM avatar и server-side Avatar API не реализованы;
-- API diary commit пока использует последовательный compatibility flow, а не batch transaction endpoint.
+```text
+hros.command.full.v2
+hros.command.inbox.v2
+hros.command.feedback.v2
+```
+
+Они отделены от основной модели:
+
+```text
+hros.snapshot.v1
+```
+
+## Ограничения
+
+- внешний LLM extraction provider пока не подключён;
+- Avatar Ontology и Avatar Change Set ещё не канонизированы;
+- real GLB/VRM avatar не подключён;
+- Inbox, feedback и avatar appearance пока не имеют server-side API;
+- multiplayer couple world не реализован;
+- API diary commit пока использует compatibility flow вместо batch transaction endpoint.
 
 ## Канонические документы
 
+- `docs/HROS_FULL_PLAYTEST_v2.md`
 - `docs/HROS_UI_UX_GAME_DESIGN_v1.md`
 - `docs/HROS_IDEOLOGY_AI_DIARY_v1.md`
 - `docs/HROS_BLUEPRINT_v1.md`
@@ -107,32 +190,32 @@ HROS не создаёт:
 - `docs/HROS_ACCEPTANCE_CRITERIA_v1.md`
 - `docs/HROS_ALIGNMENT_REPORT_v1.md`
 
-Интерфейсный skill: `skills/hros-game-interface-director/SKILL.md`.
+Интерфейсные skills:
+
+- `skills/hros-game-interface-director/SKILL.md`;
+- `skills/hros-full-playtest-builder/SKILL.md`.
 
 ## Архитектура
 
 ```text
-AI Diary / Manual Editor / Imports
-                ↓
-        Session & Change Set Layer
-                ↓
-        Repository Service
-          ↙                 ↘
- LocalStorage v1          FastAPI v1
-                                ↓
-                           PostgreSQL
-                ↓
-COMMAND UI
-├── Today
-├── Diary
-├── Living World
-├── Avatar Preview
-├── Paths
-├── Chronicle
-└── System Editors
+Quick Capture ─→ Local Inbox ─┐
+                              ├→ AI Diary → Change Set → Confirmation
+Live Dialogue ────────────────┘                    ↓
+                                          Repository Service
+                                            ↙          ↘
+                                   LocalStorage v1   FastAPI v1
+                                            ↓          PostgreSQL
+                                      HROS COMMAND
+                                      ├── Today
+                                      ├── Diary
+                                      ├── Living World
+                                      ├── Avatar
+                                      ├── Paths
+                                      ├── Chronicle
+                                      └── System Editors
 ```
 
-## Режимы запуска
+## Запуск
 
 ### GitHub Pages
 
@@ -167,10 +250,11 @@ Pipeline выполняет:
 2. проверку канонических документов и skill contracts;
 3. production build Vite;
 4. browser tests Chromium и WebKit;
-5. открытие HROS COMMAND и экрана `Сегодня`;
-6. переключение тем и пути;
-7. сохранение и восстановление Avatar Appearance Version;
-8. проверку дневника и отсутствия snapshot-изменений до confirmation;
-9. проверку Original Memory и User Confirmation;
-10. проверку прежних редакторов и отсутствие console errors;
-11. deploy только после успешного прохождения всех этапов.
+5. проверку HROS COMMAND и Full Playtest 2;
+6. Quick Capture без изменения snapshot;
+7. редактирование Inbox;
+8. Living World и Source Inspector;
+9. Avatar Suggestions без domain mutation;
+10. diary confirmation contract;
+11. прежние редакторы и отсутствие console errors;
+12. deploy только после успешного прохождения всех этапов.
