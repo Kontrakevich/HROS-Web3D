@@ -23,6 +23,13 @@
     <script type="module" src="/src/alignment-v1.js"></script>
     <script type="module" src="/src/diary-v1.js"></script>
     <script type="module" src="/src/command-ui-v1.js"></script>
+    <script>
+      try {
+        const key = 'hros.command.full.v2';
+        const value = JSON.parse(localStorage.getItem(key) || '{}');
+        if (value.tourSeen == null) localStorage.setItem(key, JSON.stringify({ ...value, tourSeen: true }));
+      } catch {}
+    </script>
     <script type="module" src="/src/command-full-v2.js"></script>
   </body>
 </html>
