@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>HROS Game Graph UI v0.1</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar panel">
+      <div>
+        <div class="eyebrow">HROS · GAME INTERFACE PROTOTYPE</div>
+        <h1>Граф взаимосвязей</h1>
+      </div>
+      <div class="topbar-meta">
+        <span class="chip chip-cyan">Ядро: Михаил</span>
+        <span class="chip chip-magenta">Режим: Living World</span>
+        <span class="chip chip-lime">Читаемость: High Contrast</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="graph-section panel">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">MAIN SCREEN</div>
+            <h2>Карта связей пользователя</h2>
+            <p>Наведи курсор на связь или нажми на неё на мобильном. Двойной клик открывает страницу связи.</p>
+          </div>
+          <div class="graph-legend">
+            <span><i class="legend legend-positive"></i> Поддержка</span>
+            <span><i class="legend legend-warm"></i> Близость</span>
+            <span><i class="legend legend-neutral"></i> Развитие</span>
+          </div>
+        </div>
+
+        <div class="graph-stage">
+          <svg id="graphSvg" viewBox="0 0 1200 720" role="img" aria-label="Граф взаимосвязей пользователя"></svg>
+          <div id="edgeTooltip" class="edge-tooltip hidden" aria-live="polite"></div>
+          <div class="graph-hint">Связь можно открыть двойным кликом</div>
+        </div>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel user-panel">
+          <div class="section-head compact">
+            <div>
+              <div class="eyebrow">USER CONTROL</div>
+              <h2>Пользователь</h2>
+            </div>
+          </div>
+
+          <div class="avatar-card">
+            <div class="avatar-stage">
+              <div class="avatar-orbit orbit-1"></div>
+              <div class="avatar-orbit orbit-2"></div>
+              <div class="avatar-body">
+                <span class="avatar-head"></span>
+                <span class="avatar-torso"></span>
+                <span class="avatar-arm left"></span>
+                <span class="avatar-arm right"></span>
+                <span class="avatar-leg left"></span>
+                <span class="avatar-leg right"></span>
+              </div>
+            </div>
+            <div class="avatar-meta">
+              <h3>Михаил</h3>
+              <p>Роль: создатель HROS</p>
+              <div class="meter">
+                <span>Социальное ядро</span>
+                <b>87%</b>
+              </div>
+              <div class="bar"><i style="width:87%"></i></div>
+            </div>
+          </div>
+
+          <div class="control-grid">
+            <button class="action-button primary">Открыть аватар</button>
+            <button class="action-button secondary">ИИ-дневник</button>
+            <button class="action-button tertiary">Добавить связь</button>
+            <button class="action-button tertiary">Записать момент</button>
+          </div>
+        </section>
+
+        <section class="panel relation-preview">
+          <div class="section-head compact">
+            <div>
+              <div class="eyebrow">EDGE DETAILS</div>
+              <h2>Текущая связь</h2>
+            </div>
+          </div>
+          <div id="relationPreview" class="empty-state">
+            Выбери связь на графе, чтобы увидеть её характеристики, название и краткую историю.
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <section id="relationPage" class="relation-page hidden panel" aria-live="polite">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">RELATION PAGE</div>
+          <h2 id="relationTitle">Страница связи</h2>
+          <p id="relationSubtitle">История формирования связи и её характеристики.</p>
+        </div>
+        <div class="relation-page-actions">
+          <button id="closeRelationPage" class="action-button secondary">Закрыть страницу</button>
+        </div>
+      </div>
+
+      <div class="relation-layout">
+        <div class="relation-summary panel-inner">
+          <div class="stats-grid" id="relationStats"></div>
+          <div class="summary-card" id="relationNarrative"></div>
+        </div>
+
+        <div class="relation-history panel-inner">
+          <h3>История формирования связи</h3>
+          <div id="relationHistory" class="timeline"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
