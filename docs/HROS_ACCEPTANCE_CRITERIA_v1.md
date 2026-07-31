@@ -7,7 +7,8 @@
 - Snapshot and diagnostics use v1 keys and schemaVersion `1.0.0`.
 - Blueprint explicitly defines AI Diary as the primary input.
 - `docs/HROS_UI_UX_GAME_DESIGN_v1.md` is the canonical interface contract.
-- `skills/hros-game-interface-director/SKILL.md` is registered.
+- `docs/HROS_FULL_PLAYTEST_v2.md` defines the complete test flow.
+- `skills/hros-game-interface-director/SKILL.md` and `skills/hros-full-playtest-builder/SKILL.md` are registered in documentation.
 
 ## Domain
 
@@ -17,7 +18,7 @@
 - Perspective requires an owner.
 - Hypothesis remains distinguishable from Fact and cannot be silently promoted.
 - Different perspectives of one moment can coexist.
-- Playtest theme, active path and avatar appearance remain outside the HROS domain snapshot.
+- Playtest theme, active path, avatar appearance, Quick Capture, Inbox and feedback remain outside the HROS domain snapshot.
 
 ## AI Diary
 
@@ -49,6 +50,22 @@
 - Layout at 390 CSS px does not create horizontal document overflow.
 - Web3D is available through World but is not required for data editing.
 
+## Full Playtest 2
+
+- Full Playtest loads after `window.__HROS_COMMAND_UI__.ready` and exposes `window.__HROS_FULL_PLAYTEST__.ready`.
+- The header identifies the build as `FULL PLAYTEST 2`.
+- Today exposes Quick Capture, Inbox, data-health summary and Relationship Pulse.
+- Quick Capture creates a local draft in `hros.command.inbox.v2`.
+- Quick Capture does not modify `hros.snapshot.v1`.
+- Inbox supports type changes, text editing and deletion.
+- Transfer to Diary only pre-fills the diary form and never sends or confirms automatically.
+- Living World v2 exposes six life areas, people, search, area filter and a detail panel.
+- Living World detail shows relationship meaning, moments, perspectives and actions without merging perspectives.
+- Source Inspector exposes ID, entity type, kind/type, statement/meaning, status, confidence, visibility, version, source, timestamps and linked IDs.
+- System offers snapshot export, Inbox access, feedback and playtest-only reset.
+- Playtest-only reset does not delete `hros.snapshot.v1`.
+- Feedback is stored in `hros.command.feedback.v2` and can be exported to JSON.
+
 ## Avatar Playtest
 
 - User can select base form, active role, palette and optional modifiers.
@@ -59,15 +76,26 @@
 - Appearance history is stored in `hros.avatar.appearance.history.v1`.
 - Saving or restoring an appearance does not modify `hros.snapshot.v1`.
 - UI explicitly labels avatar data as a local playtest preview until Avatar Ontology is canonicalized.
+- Avatar Suggestions show their source records before local application.
+- Applying an Avatar Suggestion does not modify the domain snapshot.
 
 ## Paths and Gamification
 
 - User can choose one active path.
 - Switching paths does not delete the history or progress of other paths.
 - Path progress is explicitly described as a count-based interface indicator derived from related confirmed/observed records.
+- Path evidence can be opened in Source Inspector.
 - No human score, partner score, parent score or love score is displayed.
 - No streak penalty, loot box, FOMO timer or reward for private disclosure is present.
 - Missions are voluntary and route directly to the relevant action.
+
+## Chronicle
+
+- Chronicle displays confirmed moments with source/status context.
+- User can search and filter by participant and status.
+- Filtering does not modify domain data.
+- Chronicle export contains moments and local Appearance Versions.
+- Hypotheses remain visibly distinct from confirmed narrative facts.
 
 ## Product
 
@@ -76,7 +104,6 @@
 - Privacy status is visible in the UI.
 - Original, Semantic and Living Memory are displayed separately.
 - Web3D remains available and does not own persistence logic.
-- Chronicle displays confirmed moments with source/status context.
 
 ## API
 
@@ -86,14 +113,14 @@
 - Reset restores v1 seed.
 - Diagnostics expose version and operational events without private content.
 - Production target includes a server-side transactional Diary Change Set endpoint; sequential record commit remains compatibility mode until implemented.
-- Avatar settings remain local until Avatar Ontology, repository and API contracts are approved.
+- Avatar, Inbox and feedback remain local until their ontology, repository and API contracts are approved.
 
 ## Migration
 
 - Existing v0.2/v0.4 local snapshot migrates automatically without deleting the source key.
 - Existing entity IDs and counts are retained.
 - Migration is idempotent.
-- COMMAND UI preferences do not alter migration behavior.
+- COMMAND and Full Playtest preferences do not alter migration behavior.
 
 ## Verification
 
@@ -101,13 +128,17 @@
 - Production build passes.
 - Chromium and WebKit open the deployed base path.
 - Browser test verifies `schemaVersion=1.0.0`.
-- Browser test waits for `window.__HROS_COMMAND_UI__.ready`.
-- Browser test opens the default Today screen and finds one dominant CTA.
+- Browser test waits for `window.__HROS_COMMAND_UI__.ready` and `window.__HROS_FULL_PLAYTEST__.ready`.
+- Browser test opens Today and finds one dominant CTA plus Full Playtest controls.
 - Browser test changes theme and verifies no snapshot mutation.
+- Browser test creates and edits a Quick Capture draft and verifies no snapshot mutation.
+- Browser test opens Living World v2 and Source Inspector.
 - Browser test saves and restores an Appearance Version and verifies no snapshot mutation.
+- Browser test applies an Avatar Suggestion and verifies no snapshot mutation.
 - Browser test switches the active path and verifies no snapshot mutation.
 - Browser test checks the 390 px mobile layout and absence of horizontal overflow.
 - Browser test verifies no snapshot changes before diary confirmation.
 - Browser test commits a diary session and finds its Original Memory.
+- Browser test saves structured playtest feedback.
 - Browser test verifies Knowledge view, creation/persistence of a Perspective, Couple Mode, Book and zero console errors.
 - GitHub Pages deploy runs only after all checks succeed.
