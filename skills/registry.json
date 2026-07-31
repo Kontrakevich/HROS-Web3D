@@ -4,6 +4,7 @@
   "skills": [
     {"id":"ai-diary-session","path":"skills/ai-diary-session/SKILL.md"},
     {"id":"hros-game-interface-director","path":"skills/hros-game-interface-director/SKILL.md"},
+    {"id":"hros-full-playtest-builder","path":"skills/hros-full-playtest-builder/SKILL.md"},
     {"id":"person-profile","path":"skills/person-profile/SKILL.md"},
     {"id":"relationship-state","path":"skills/relationship-state/SKILL.md"},
     {"id":"moment-engine","path":"skills/moment-engine/SKILL.md"},
