@@ -9,7 +9,7 @@ test('HROS Full Playtest 2 expands the experience without hidden domain mutation
 
   await page.goto('', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__HROS_FULL_PLAYTEST__?.ready === true);
-  await expect(page.getByText('FULL PLAYTEST 2')).toBeVisible();
+  await expect(page.locator('.command-context .command-release-badge')).toHaveText('FULL PLAYTEST 2');
   await expect(page.locator('.full-today-strip')).toBeVisible();
 
   const snapshotBeforeCapture = await page.evaluate(() => localStorage.getItem('hros.snapshot.v1'));
@@ -30,7 +30,7 @@ test('HROS Full Playtest 2 expands the experience without hidden domain mutation
 
   await page.locator('.full-today-strip [data-full-action="inbox"]').click();
   await expect(page.getByRole('heading', { name: 'Входящие', exact: true })).toBeVisible();
-  await expect(page.getByText('Тестовая входящая запись о важном разговоре.')).toBeVisible();
+  await expect(page.locator('[data-inbox-text]')).toHaveValue('Тестовая входящая запись о важном разговоре.');
   await page.locator('[data-inbox-text]').fill('Исправленная тестовая запись для дневника.');
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('hros.command.inbox.v2'))[0].text)).toBe('Исправленная тестовая запись для дневника.');
 
