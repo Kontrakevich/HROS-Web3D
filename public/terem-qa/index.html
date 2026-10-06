@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEREM QA Review</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#f3f3f3;background:#111}*{box-sizing:border-box}body{margin:0;background:#111}
+header{position:sticky;top:0;z-index:5;background:#111e;border-bottom:1px solid #333;padding:14px 18px}
+h1{font-size:20px;margin:0 0 6px}.meta{font-size:13px;color:#aaa}.wrap{max-width:1180px;margin:auto;padding:18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tabs button,.decision button{border:1px solid #444;background:#1d1d1d;color:#eee;border-radius:8px;padding:10px 14px;cursor:pointer}.tabs button.active{background:#eee;color:#111}
+.card{background:#181818;border:1px solid #333;border-radius:12px;padding:14px}.hint{font-size:15px;line-height:1.45;margin:0 0 12px;color:#ddd}
+img{display:block;width:100%;height:auto;border-radius:8px;background:#000}.decision{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.decision button[data-v="ACCEPT"]{border-color:#5a8}.decision button[data-v="REJECT"]{border-color:#a65}.decision button[data-v="UNCLEAR"]{border-color:#aa8}
+.status{margin-top:12px;color:#bbb;font-size:14px}.note{margin-top:18px;color:#888;font-size:12px;line-height:1.4}
+</style></head><body>
+<header><h1>TEREM Visual DNA — Continuity Evidence v2.1</h1><div class="meta">Human visual gate · SOURCE CLEAN → SOURCE + ENDPOINTS → MASK/BACKBONE + PROPOSAL</div></header>
+<main class="wrap"><div class="tabs" id="tabs"></div>
+<section class="card"><p class="hint"><b id="title">CE001</b>. Смотрите прежде всего на <b>среднюю панель</b>: два жёлтых кружка обозначают окончания. Решите, принадлежит ли промежуток одной непрерывной линии орнамента. Левая панель — чистый источник; правая — только предложение модели.</p>
+<img id="img" src="CE001.jpg" alt="TEREM continuity review">
+<div class="decision"><button data-v="ACCEPT">Принять</button><button data-v="REJECT">Отклонить</button><button data-v="UNCLEAR">Неясно</button></div>
+<div class="status" id="status">Решение не выбрано.</div></section>
+<div class="note">Решение относится только к топологической связи. Исходная master-mask автоматически не изменяется.</div></main>
+<script>
+const ids=["CE001","CE002","CE003","CE004","CE005"];let current="CE001";
+const tabs=document.getElementById("tabs"),img=document.getElementById("img"),title=document.getElementById("title"),status=document.getElementById("status");
+function renderTabs(){tabs.innerHTML="";ids.forEach(id=>{const b=document.createElement("button");b.textContent=id+(localStorage.getItem("terem-"+id)?" · ✓":"");b.className=id===current?"active":"";b.onclick=()=>show(id);tabs.appendChild(b)})}
+function show(id){current=id;img.src=id+".jpg";title.textContent=id;const v=localStorage.getItem("terem-"+id);status.textContent=v?"Сохранено в этом браузере: "+v:"Решение не выбрано.";renderTabs()}
+document.querySelectorAll(".decision button").forEach(b=>b.onclick=()=>{localStorage.setItem("terem-"+current,b.dataset.v);status.textContent="Сохранено в этом браузере: "+b.dataset.v;renderTabs()});
+renderTabs();
+</script></body></html>
